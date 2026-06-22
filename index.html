@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>المرصد — مختبر الفيزياء التفاعلي الشامل</title>
+<meta name="description" content="مختبر فيزياء تفاعلي شامل يغطي الميكانيكا والجاذبية والكهرومغناطيسية والموجات والموائع والفيزياء الحديثة والفوضى — بمحاكيات حقيقية تعمل بالكامل في المتصفح.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   نظام التصميم — رموز التصميم (Design Tokens)
+   ============================================================ */
+:root{
+  --ink-void:#11140f;
+  --panel:#161b16;
+  --panel-raised:#1c2219;
+  --line:#2a342a;
+  --line-soft:#212a21;
+  --chalk:#ECE9D8;
+  --chalk-dim:#9CA89B;
+  --chalk-faint:#5e6b5c;
+
+  --brass:#E8A33D;     /* الميكانيكا الكلاسيكية */
+  --indigo:#8C93FF;    /* الجاذبية والفلك */
+  --cyan:#4FD8E8;      /* الكهرومغناطيسية */
+  --violet:#C68CFF;    /* الموجات والضوء */
+  --ember:#F2774A;     /* الموائع والحرارة */
+  --magenta:#FF6FA5;   /* الفيزياء الحديثة */
+  --phosphor:#8CFF8A;  /* الفوضى والأنظمة المعقدة */
+
+  --accent: var(--brass);
+  --accent-dim: color-mix(in srgb, var(--accent) 35%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 55%, transparent);
+
+  --font-ar:'IBM Plex Sans Arabic', sans-serif;
+  --font-display:'Space Grotesk','IBM Plex Sans Arabic', sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+
+  --radius: 3px;
+  --header-h: 60px;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:
+    radial-gradient(ellipse 1200px 700px at 50% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%),
+    var(--ink-void);
+  color:var(--chalk);
+  font-family:var(--font-ar);
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  transition:background 0.6s ease;
+}
+.ltr{direction:ltr; unicode-bidi:isolate; font-family:var(--font-mono);}
+::selection{background:var(--accent); color:#0a0d09;}
+::-webkit-scrollbar{width:9px; height:9px;}
+::-webkit-scrollbar-track{background:var(--panel);}
+::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+::-webkit-scrollbar-thumb:hover{background:var(--chalk-faint);}
+
+/* خلفية شبكة ورق رسم بياني دقيقة */
+.grain{
+  position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:radial-gradient(ellipse 1400px 900px at 50% 0%, black, transparent 75%);
+}
+
+/* ============================================================
+   الترويسة
+   ============================================================ */
+header{
+  position:sticky; top:0; z-index:50;
+  height:var(--header-h);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 18px;
+  background:color-mix(in srgb, var(--ink-void) 88%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand-mark{
+  width:34px; height:34px; flex:none; position:relative;
+  border:1.5px solid var(--accent); border-radius:50%;
+  transition:border-color .5s ease;
+}
+.brand-mark::before, .brand-mark::after{
+  content:''; position:absolute; background:var(--accent); transition:background .5s ease;
+}
+.brand-mark::before{ width:1.5px; height:34px; right:50%; top:0; transform:translateX(50%) rotate(30deg); }
+.brand-mark::after{ width:6px; height:6px; border-radius:50%; right:50%; top:50%; transform:translate(50%,-50%); box-shadow:0 0 8px var(--accent); }
+.brand-text h1{ font:600 17px/1 var(--font-display); margin:0; letter-spacing:.5px; }
+.brand-text p{ margin:3px 0 0; font-size:11px; color:var(--chalk-dim); }
+.header-stats{
+  display:flex; gap:18px; font-family:var(--font-mono); font-size:11px; color:var(--chalk-dim);
+}
+.header-stats b{ color:var(--chalk); font-weight:600; }
+.header-stats span{display:flex; flex-direction:column; align-items:center; gap:2px;}
+.menu-btn{
+  display:none; background:none; border:1px solid var(--line); color:var(--chalk);
+  width:36px; height:36px; border-radius:var(--radius); cursor:pointer;
+}
+.menu-btn span{display:block; width:16px; height:1.5px; background:var(--chalk); margin:3px auto;}
+
+/* ============================================================
+   التخطيط العام
+   ============================================================ */
+.shell{
+  position:relative; z-index:1;
+  display:grid;
+  grid-template-columns: 270px 1fr;
+  min-height:calc(100% - var(--header-h));
+}
+
+/* ============================================================
+   الشريط الجانبي
+   ============================================================ */
+nav.sidebar{
+  border-inline-start:1px solid var(--line);
+  padding:14px 10px 40px;
+  height:calc(100vh - var(--header-h));
+  position:sticky; top:var(--header-h);
+  overflow-y:auto;
+}
+.cat-group{ margin-bottom:4px; }
+.cat-head{
+  width:100%; display:flex; align-items:center; gap:10px;
+  background:none; border:none; color:var(--chalk-dim);
+  font-family:var(--font-ar); font-size:12.5px; font-weight:600;
+  padding:9px 8px; cursor:pointer; border-radius:var(--radius);
+  text-align:right;
+}
+.cat-head:hover{ color:var(--chalk); background:var(--panel); }
+.cat-head .dot{
+  width:7px; height:7px; border-radius:50%; flex:none;
+  background:var(--cat-color); box-shadow:0 0 6px var(--cat-color);
+}
+.cat-head .count{ margin-inline-start:auto; font-family:var(--font-mono); font-size:10px; color:var(--chalk-faint); }
+.cat-head .chev{ width:8px; height:8px; flex:none; border-inline-end:1.5px solid var(--chalk-faint); border-bottom:1.5px solid var(--chalk-faint); transform:rotate(45deg); transition:transform .25s ease; margin-inline-start:2px; }
+.cat-group.open .cat-head .chev{ transform:rotate(-135deg); }
+.cat-group.open .cat-head{ color:var(--chalk); }
+
+.sim-list{ display:grid; gap:1px; overflow:hidden; max-height:0; transition:max-height .35s ease; padding-inline-start:17px; border-inline-start:1px dashed var(--line); margin-inline-start:12px; }
+.cat-group.open .sim-list{ max-height:900px; }
+.sim-btn{
+  display:block; width:100%; text-align:right; background:none; border:none;
+  color:var(--chalk-dim); font-family:var(--font-ar); font-size:12.5px;
+  padding:7px 10px; cursor:pointer; border-radius:var(--radius); line-height:1.4;
+  position:relative;
+}
+.sim-btn:hover{ color:var(--chalk); background:var(--panel); }
+.sim-btn.active{ color:var(--ink-void); background:var(--cat-color); font-weight:600; }
+
+/* ============================================================
+   المنطقة الرئيسية
+   ============================================================ */
+main.stage{ padding:18px 18px 60px; min-width:0; }
+
+.sim-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:12px; flex-wrap:wrap; }
+.sim-header .titles{ min-width:0; }
+.crumb{ font-family:var(--font-mono); font-size:10.5px; color:var(--cat-color); letter-spacing:.5px; text-transform:uppercase; margin-bottom:4px; }
+.sim-header h2{ margin:0; font:600 22px/1.25 var(--font-display); }
+.sim-header .sub{ margin:5px 0 0; font-size:13px; color:var(--chalk-dim); max-width:62ch; }
+
+.transport{ display:flex; align-items:center; gap:7px; flex:none; }
+.tbtn{
+  width:36px; height:36px; border-radius:50%; border:1px solid var(--line);
+  background:var(--panel); color:var(--chalk); cursor:pointer; display:flex;
+  align-items:center; justify-content:center; transition:border-color .2s, color .2s;
+}
+.tbtn:hover{ border-color:var(--cat-color); color:var(--cat-color); }
+.tbtn svg{ width:14px; height:14px; }
+.tbtn.primary{ background:var(--cat-color); border-color:var(--cat-color); color:var(--ink-void); }
+.tbtn.primary:hover{ color:var(--ink-void); filter:brightness(1.1); }
+
+/* إطار الشاشة — العنصر المميّز */
+.scope-frame{
+  position:relative; border:1px solid var(--line); border-radius:6px;
+  background:radial-gradient(ellipse at 50% 0%, #161d15, #0c0f0a 85%);
+  overflow:hidden; box-shadow:0 0 0 1px #000, 0 18px 50px -20px #000;
+}
+.scope-frame::before{ /* حدود متوهجة */
+  content:''; position:absolute; inset:0; border-radius:6px; pointer-events:none; z-index:5;
+  box-shadow:inset 0 0 0 1px var(--cat-color), inset 0 0 26px -6px var(--accent-glow);
+  opacity:.55;
+}
+.scope-frame .bracket{ position:absolute; width:18px; height:18px; border-color:var(--cat-color); z-index:6; opacity:.85; pointer-events:none; }
+.scope-frame .bracket.tl{ top:8px; right:8px; border-top:1.5px solid; border-right:1.5px solid; }
+.scope-frame .bracket.tr{ top:8px; left:8px; border-top:1.5px solid; border-left:1.5px solid; }
+.scope-frame .bracket.bl{ bottom:8px; right:8px; border-bottom:1.5px solid; border-right:1.5px solid; }
+.scope-frame .bracket.br{ bottom:8px; left:8px; border-bottom:1.5px solid; border-left:1.5px solid; }
+.scanlines{
+  position:absolute; inset:0; pointer-events:none; z-index:4; opacity:.05;
+  background:repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 3px);
+}
+canvas#simCanvas{ display:block; width:100%; height:100%; touch-action:none; }
+.canvas-wrap{ position:relative; width:100%; aspect-ratio:16/9; }
+@media (max-width:720px){ .canvas-wrap{ aspect-ratio:4/5; } }
+
+.hud{
+  position:absolute; top:10px; right:12px; z-index:6; display:flex; flex-direction:column; gap:3px;
+  font-family:var(--font-mono); font-size:10.5px; color:var(--cat-color); pointer-events:none;
+  text-shadow:0 0 8px #000, 0 0 2px #000;
+}
+.hud .rec{ display:flex; align-items:center; gap:5px; color:var(--chalk-dim); }
+.hud .rec i{ width:6px; height:6px; border-radius:50%; background:#ff5050; box-shadow:0 0 6px #ff5050; animation:blink 1.4s infinite; }
+@keyframes blink{ 50%{ opacity:.25; } }
+.readouts{
+  position:absolute; bottom:10px; left:12px; z-index:6; display:flex; gap:14px; flex-wrap:wrap; max-width:60%;
+  font-family:var(--font-mono); font-size:11px; color:var(--chalk); pointer-events:none;
+  text-shadow:0 0 6px #000;
+}
+.readouts .ro{ display:flex; flex-direction:column; gap:1px; }
+.readouts .ro label{ color:var(--chalk-faint); font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; }
+.readouts .ro b{ color:var(--cat-color); font-size:13px; }
+.hint{
+  position:absolute; bottom:10px; right:12px; z-index:6; font-size:10.5px; color:var(--chalk-faint);
+  font-family:var(--font-ar); max-width:42%; text-align:left; line-height:1.5;
+}
+
+/* لوحة التحكم وقسم الشرح */
+.panels{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; align-items:start; }
+@media (max-width:880px){ .panels{ grid-template-columns:1fr; } }
+.card{ background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:16px 16px 18px; }
+.card h3{ margin:0 0 12px; font:600 12px/1 var(--font-ar); color:var(--chalk-dim); text-transform:uppercase; letter-spacing:.5px; display:flex; align-items:center; gap:8px;}
+.card h3::before{ content:''; width:5px; height:5px; background:var(--cat-color); }
+
+.control{ margin-bottom:14px; }
+.control:last-child{ margin-bottom:0; }
+.control .row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+.control label{ font-size:12.5px; color:var(--chalk-dim); }
+.control .val{ font-family:var(--font-mono); font-size:12px; color:var(--cat-color); direction:ltr; }
+input[type=range]{
+  -webkit-appearance:none; width:100%; height:3px; background:var(--line); border-radius:3px; outline:none; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--cat-color);
+  border:2px solid var(--ink-void); box-shadow:0 0 0 1px var(--cat-color), 0 0 10px var(--accent-glow); cursor:pointer; margin-top:0;
+}
+input[type=range]::-moz-range-thumb{
+  width:14px; height:14px; border-radius:50%; background:var(--cat-color); border:2px solid var(--ink-void);
+  box-shadow:0 0 0 1px var(--cat-color); cursor:pointer;
+}
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; }
+.switch{ position:relative; width:36px; height:20px; flex:none; }
+.switch input{ opacity:0; width:0; height:0; }
+.switch .track{ position:absolute; inset:0; background:var(--line); border-radius:20px; transition:.2s; cursor:pointer; }
+.switch .track::before{ content:''; position:absolute; width:14px; height:14px; right:3px; top:3px; background:var(--chalk-dim); border-radius:50%; transition:.2s; }
+.switch input:checked + .track{ background:var(--accent-dim); }
+.switch input:checked + .track::before{ transform:translateX(-16px); background:var(--cat-color); box-shadow:0 0 6px var(--accent-glow); }
+.btn-row{ display:flex; gap:8px; flex-wrap:wrap; }
+.chip-btn{
+  border:1px solid var(--line); background:var(--panel-raised); color:var(--chalk-dim); font-family:var(--font-ar);
+  font-size:11.5px; padding:7px 11px; border-radius:20px; cursor:pointer; transition:.2s;
+}
+.chip-btn:hover{ border-color:var(--cat-color); color:var(--chalk); }
+.chip-btn.active{ background:var(--cat-color); border-color:var(--cat-color); color:var(--ink-void); font-weight:600; }
+
+.desc{ font-size:13px; line-height:1.9; color:var(--chalk-dim); margin:0 0 14px; }
+.formula-box{
+  background:var(--ink-void); border:1px solid var(--line); border-radius:4px; padding:12px 14px; margin-bottom:14px;
+  font-family:var(--font-mono); font-size:13.5px; color:var(--cat-color); direction:ltr; text-align:center; overflow-x:auto; white-space:nowrap;
+}
+.law-list{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.law-list li{ font-size:12px; color:var(--chalk-dim); padding-inline-start:14px; position:relative; line-height:1.7; }
+.law-list li::before{ content:''; position:absolute; right:0; top:7px; width:5px; height:5px; background:var(--cat-color); }
+.law-list b{ color:var(--chalk); font-weight:600; }
+
+footer{ text-align:center; padding:30px 16px 50px; color:var(--chalk-faint); font-size:11px; border-top:1px solid var(--line); margin-top:30px; }
+footer .ltr{ font-family:var(--font-mono); }
+
+/* ============================================================
+   استجابة للجوال
+   ============================================================ */
+@media (max-width:920px){
+  .shell{ grid-template-columns:1fr; }
+  nav.sidebar{
+    position:fixed; inset:var(--header-h) 0 0 auto; width:280px; z-index:60;
+    background:var(--ink-void); transform:translateX(102%); transition:transform .3s ease;
+    box-shadow:-10px 0 40px -10px #000; height:calc(100vh - var(--header-h));
+  }
+  html[dir=rtl] nav.sidebar{ inset:var(--header-h) auto 0 0; transform:translateX(-102%); }
+  body.nav-open nav.sidebar{ transform:translateX(0); }
+  body.nav-open::after{ content:''; position:fixed; inset:var(--header-h) 0 0 0; background:#000a; z-index:55; }
+  .menu-btn{ display:block; }
+  .header-stats{ display:none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .hud .rec i{ animation:none; }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark" id="brandMark"></div>
+    <div class="brand-text">
+      <h1>المرصد</h1>
+      <p>مختبر الفيزياء التفاعلي</p>
+    </div>
+  </div>
+  <div class="header-stats">
+    <span><b id="statSims">—</b> محاكاة</span>
+    <span><b id="statCats">7</b> فروع</span>
+    <span><b id="statFps">60</b> fps</span>
+  </div>
+  <button class="menu-btn" id="menuBtn" aria-label="القائمة"><span></span><span></span><span></span></button>
+</header>
+
+<div class="shell">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="stage">
+    <div class="sim-header">
+      <div class="titles">
+        <div class="crumb" id="crumb">—</div>
+        <h2 id="simTitle">جارٍ التحميل…</h2>
+        <p class="sub" id="simSub"></p>
+      </div>
+      <div class="transport">
+        <button class="tbtn" id="btnReset" title="إعادة ضبط">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 12V6M3 12h6"/></svg>
+        </button>
+        <button class="tbtn primary" id="btnPlay" title="إيقاف/تشغيل">
+          <svg id="iconPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5l13 7-13 7V5z"/></svg>
+          <svg id="iconPause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="scope-frame">
+      <div class="canvas-wrap">
+        <canvas id="simCanvas"></canvas>
+        <div class="scanlines"></div>
+        <span class="bracket tl"></span><span class="bracket tr"></span>
+        <span class="bracket bl"></span><span class="bracket br"></span>
+        <div class="hud">
+          <div class="rec"><i></i> محاكاة حيّة</div>
+        </div>
+        <div class="readouts" id="readouts"></div>
+        <div class="hint" id="hint"></div>
+      </div>
+    </div>
+
+    <div class="panels">
+      <div class="card">
+        <h3>لوحة التحكم</h3>
+        <div id="controls"></div>
+      </div>
+      <div class="card">
+        <h3>الأساس الفيزيائي</h3>
+        <p class="desc" id="simDesc"></p>
+        <div class="formula-box ltr" id="simFormula"></div>
+        <ul class="law-list" id="simLaws"></ul>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer>
+  مختبر فيزياء تفاعلي — كل المحاكيات تعمل محليًا في متصفحك دون اتصال بالإنترنت · بُني كملف HTML واحد مستقل
+  <div class="ltr" style="margin-top:6px;opacity:.6">single-file physics lab · canvas 2D · vanilla JS</div>
+</footer>
+
+<script>
+'use strict';
+/* ============================================================
+   1) الأدوات المساعدة العامة
+   ============================================================ */
+const TAU = Math.PI*2;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const fmt=(v,d=2)=>{ if(!isFinite(v)) return '0'; return (Math.abs(v)<0.0005?0:v).toFixed(d); };
+function vlen(x,y){ return Math.hypot(x,y); }
+
+function drawArrow(ctx,x1,y1,x2,y2,color,w=2){
+  const ang=Math.atan2(y2-y1,x2-x1), len=vlen(x2-x1,y2-y1);
+  if(len<2) return;
+  ctx.save();
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=w; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const hs=Math.min(8,len*0.4);
+  ctx.translate(x2,y2); ctx.rotate(ang);
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-hs*1.6,hs*0.8); ctx.lineTo(-hs*1.6,-hs*0.8); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function grid(ctx,w,h,step,color){
+  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=1; ctx.beginPath();
+  for(let x=0;x<=w;x+=step){ ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,h); }
+  for(let y=0;y<=h;y+=step){ ctx.moveTo(0,y+.5); ctx.lineTo(w,y+.5); }
+  ctx.stroke(); ctx.restore();
+}
+function glowDot(ctx,x,y,r,color){
+  ctx.save();
+  const g=ctx.createRadialGradient(x,y,0,x,y,r*3);
+  g.addColorStop(0,color); g.addColorStop(1,'transparent');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r*3,0,TAU); ctx.fill();
+  ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,r,0,TAU); ctx.fill();
+  ctx.restore();
+}
+
+/* مكامل RK4 بسيط لأنظمة من نوع dy/dt=f(y) حيث y مصفوفة أرقام */
+function rk4Step(y, dt, f){
+  const n=y.length;
+  const add=(a,b,s)=>{ const o=new Array(n); for(let i=0;i<n;i++) o[i]=a[i]+b[i]*s; return o; };
+  const k1=f(y);
+  const k2=f(add(y,k1,dt/2));
+  const k3=f(add(y,k2,dt/2));
+  const k4=f(add(y,k3,dt));
+  const out=new Array(n);
+  for(let i=0;i<n;i++) out[i]=y[i]+(dt/6)*(k1[i]+2*k2[i]+2*k3[i]+k4[i]);
+  return out;
+}
+
+/* ============================================================
+   2) إعدادات الفروع (الفئات)
+   ============================================================ */
+const CATEGORIES = [
+  {id:'mechanics', label:'الميكانيكا الكلاسيكية', color:'#E8A33D',
+   icon:'M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8M12 8a4 4 0 100 8 4 4 0 000-8z'},
+  {id:'gravity', label:'الجاذبية والفلك', color:'#8C93FF',
+   icon:'M12 12m-2.5 0a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0M12 12m-10 0a10 4 0 1 0 20 0a10 4 0 1 0-20 0'},
+  {id:'em', label:'الكهرومغناطيسية', color:'#4FD8E8',
+   icon:'M13 2L4 14h7l-1 8 9-12h-7l1-8z'},
+  {id:'waves', label:'الموجات والضوء', color:'#C68CFF',
+   icon:'M2 12c2 0 2-6 4-6s2 6 4 6 2-6 4-6 2 6 4 6 2-6 4-6'},
+  {id:'fluids', label:'الموائع والحرارة', color:'#F2774A',
+   icon:'M12 2s6 7 6 11.5A6 6 0 1 1 6 13.5C6 9 12 2 12 2z'},
+  {id:'modern', label:'الفيزياء الحديثة', color:'#FF6FA5',
+   icon:'M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0M12 12m-10 0a10 4 0 1 0 20 0a10 4 0 1 0-20 0M12 12m-10 0a10 4 0 1 0 20 0a10 4 0 1 0-20 0'},
+  {id:'chaos', label:'الفوضى والأنظمة المعقدة', color:'#8CFF8A',
+   icon:'M12 2C7 2 4 6 6 10c2 4 8 2 8 6s-5 6-9 4M12 2c5 0 8 4 6 8'},
+];
+const catById={}; CATEGORIES.forEach(c=>catById[c.id]=c);
+function shade(hex,amt){ /* تفتيح/تعتيم لون hex بنسبة amt (-1..1) */
+  const n=parseInt(hex.slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  const f=v=> clamp(Math.round(v + (amt>0?(255-v):v)*amt),0,255);
+  r=f(r);g=f(g);b=f(b);
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+function hexA(hex,a){ const n=parseInt(hex.slice(1),16); const r=(n>>16)&255,g=(n>>8)&255,b=n&255; return `rgba(${r},${g},${b},${a})`; }
+
+/* ============================================================
+   3) سجلّ المحاكيات — كل محاكاة تُضاف عبر defineSim({...})
+   ============================================================ */
+const REGISTRY=[];
+const simById={};
+function defineSim(def){ REGISTRY.push(def); simById[def.id]=def; }
+
+/* ---------- 1) سقوط حر وحركة المقذوفات ---------- */
+defineSim({
+  id:'projectile', category:'mechanics', title:'سقوط حر وحركة المقذوفات',
+  tagline:'قذف جسم بزاوية تحت تأثير الجاذبية، مع وبدون مقاومة الهواء.',
+  description:'عند قذف جسم بزاوية θ وسرعة ابتدائية v₀، تبقى المركبة الأفقية للسرعة ثابتة بينما تتسارع المركبة الرأسية بفعل الجاذبية فقط. الخط المتقطع هو المسار النظري المثالي، والخط المصمت هو المسار الفعلي عند تفعيل مقاومة الهواء.',
+  formula:'R = v0² sin(2θ) / g',
+  laws:[
+    '<b>قانون نيوتن الثاني:</b> القوة المحصلة = الكتلة × التسارع، والجاذبية تسبب تسارعًا ثابتًا للأسفل فقط.',
+    '<b>استقلالية المركبتين:</b> الحركة الأفقية والرأسية مستقلتان تمامًا بدون مقاومة هواء.',
+    '<b>المدى الأعظم:</b> يتحقق عند زاوية 45° في الفراغ.'
+  ],
+  hint:'ارفع مقاومة الهواء لمشاهدة انحراف المسار عن المثالي',
+  params:[
+    {key:'angle', label:'زاوية الإطلاق', min:5,max:85,step:1,value:45,unit:'°',dec:0},
+    {key:'speed', label:'السرعة الابتدائية', min:5,max:80,step:1,value:40,unit:' م/ث',dec:0},
+    {key:'gravity', label:'الجاذبية g', min:1,max:25,step:0.1,value:9.8,unit:' م/ث²',dec:1},
+    {key:'drag', label:'مقاومة الهواء', min:0,max:1,step:0.02,value:0,dec:2},
+  ],
+  init(p){
+    return {t:0,x:0,y:0,vx:p.speed*Math.cos(p.angle*Math.PI/180),vy:p.speed*Math.sin(p.angle*Math.PI/180),
+            trail:[],landed:false,landT:0,maxH:0,range:0};
+  },
+  step(s,p,dt){
+    if(s.landed){ s.landT+=dt; if(s.landT>1.1) Object.assign(s,this.init(p)); return; }
+    s.t+=dt;
+    const k=p.drag*0.5, speed=vlen(s.vx,s.vy);
+    const ax=-k*speed*s.vx, ay=-p.gravity-k*speed*s.vy;
+    s.vx+=ax*dt; s.vy+=ay*dt; s.x+=s.vx*dt; s.y+=s.vy*dt;
+    if(s.y>s.maxH) s.maxH=s.y;
+    s.trail.push({x:s.x,y:s.y}); if(s.trail.length>2000) s.trail.shift();
+    if(s.y<=0 && s.t>0.05){ s.y=0; s.landed=true; s.range=s.x; }
+  },
+  draw(ctx,s,p,{CW,CH}){
+    const margin=42, groundY=CH-margin;
+    const viewW=Math.max(40,(p.speed*p.speed*Math.sin(2*p.angle*Math.PI/180)/p.gravity)*1.4||80);
+    const scale=(CW-60)/viewW;
+    const X=m=>40+m*scale, Y=m=>groundY-m*scale;
+    grid(ctx,CW,CH,28,'#1c241b');
+    ctx.strokeStyle='#3a4a37'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,groundY+.5); ctx.lineTo(CW,groundY+.5); ctx.stroke();
+    ctx.save(); ctx.setLineDash([4,5]); ctx.strokeStyle='#5e6b5c'; ctx.lineWidth=1.4; ctx.beginPath();
+    const vx0=p.speed*Math.cos(p.angle*Math.PI/180), vy0=p.speed*Math.sin(p.angle*Math.PI/180), Ttot=2*vy0/p.gravity;
+    for(let i=0;i<=60;i++){ const tt=Ttot*i/60, xx=vx0*tt, yy=vy0*tt-0.5*p.gravity*tt*tt; if(yy<0) break; const px=X(xx),py=Y(yy); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); }
+    ctx.stroke(); ctx.restore();
+    ctx.strokeStyle=App.accentHex; ctx.lineWidth=2; ctx.beginPath();
+    s.trail.forEach((pt,i)=>{ const px=X(pt.x),py=Y(pt.y); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+    ctx.stroke();
+    glowDot(ctx,X(s.x),Y(Math.max(0,s.y)),6,App.accentHex);
+    if(!s.landed){ drawArrow(ctx,X(s.x),Y(s.y),X(s.x)+s.vx*1.2,Y(s.y),'#ffffff77',1.5); drawArrow(ctx,X(s.x),Y(s.y),X(s.x),Y(s.y)-s.vy*1.2,'#ffffff77',1.5); }
+  },
+  readouts(s){ return [['الارتفاع الأقصى',fmt(s.maxH,1)+' م'],['المدى',fmt(s.landed?s.range:s.x,1)+' م'],['الزمن',fmt(s.t,2)+' ث'],['السرعة',fmt(vlen(s.vx,s.vy),1)+' م/ث']]; }
+});
+
+/* ---------- 2) البندول البسيط ---------- */
+defineSim({
+  id:'pendulum', category:'mechanics', title:'البندول البسيط',
+  tagline:'حركة توافقية شبه دورية تحت تأثير الجاذبية وزاوية الإطلاق.',
+  description:'يتأرجح البندول حول وضع الاتزان بفعل عزم الجاذبية المعيد. عند الزوايا الصغيرة تقترب حركته من التوافقية البسيطة (SHM) وتصبح الفترة شبه مستقلة عن السعة، لكن عند الزوايا الكبيرة تطول الفترة فعليًا عن القيمة التقريبية.',
+  formula:'T ≈ 2π√(L/g)   (للزوايا الصغيرة)',
+  laws:[
+    '<b>عزم الجاذبية المعيد:</b> τ = −mgL sin(θ) يسحب البندول دائمًا نحو الاتزان.',
+    '<b>تقريب الزاوية الصغيرة:</b> sin(θ)≈θ يجعل الحركة توافقية بسيطة تقريبًا.',
+    '<b>حفظ الطاقة:</b> الطاقة الحركية + الكامنة الثابتة عند انعدام التخامد.'
+  ],
+  hint:'اسحب الكرة بالماوس لتغيير زاوية البداية ثم أفلتها',
+  params:[
+    {key:'length', label:'طول الخيط L', min:0.4,max:3,step:0.05,value:1.5,unit:' م',dec:2},
+    {key:'gravity', label:'الجاذبية g', min:1,max:25,step:0.1,value:9.8,unit:' م/ث²',dec:1},
+    {key:'damping', label:'التخامد', min:0,max:0.5,step:0.01,value:0.03,dec:2},
+    {key:'amp', label:'السعة الابتدائية', min:5,max:170,step:1,value:55,unit:'°',dec:0},
+  ],
+  init(p){ return {angle:p.amp*Math.PI/180, vel:0, t:0, dragging:false}; },
+  step(s,p,dt){
+    if(s.dragging) return;
+    const acc=-(p.gravity/p.length)*Math.sin(s.angle)-p.damping*s.vel;
+    s.vel+=acc*dt; s.angle+=s.vel*dt; s.t+=dt;
+  },
+  onDown(s,p,x,y,{CW}){
+    const pivotX=CW/2, pivotY=46;
+    const dx=x-pivotX, dy=y-pivotY;
+    if(Math.hypot(dx,dy)<300){ s.dragging=true; s.angle=Math.atan2(dx,dy); s.vel=0; }
+  },
+  onMove(s,p,x,y,{CW}){ if(s.dragging){ const pivotX=CW/2,pivotY=46; s.angle=Math.atan2(x-pivotX,y-pivotY); } },
+  onUp(s){ s.dragging=false; },
+  draw(ctx,s,p,{CW,CH}){
+    const pivotX=CW/2, pivotY=46;
+    const Lpx=Math.min(CH-110, (CW/2-50))*0.92;
+    grid(ctx,CW,CH,30,'#1d241a');
+    const bx=pivotX+Math.sin(s.angle)*Lpx, by=pivotY+Math.cos(s.angle)*Lpx;
+    ctx.strokeStyle='#39432f'; ctx.setLineDash([3,5]); ctx.beginPath(); ctx.moveTo(pivotX,pivotY); ctx.lineTo(pivotX,pivotY+Lpx); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#2a3324'; ctx.fillRect(pivotX-26,pivotY-10,52,10);
+    ctx.strokeStyle='#8a9482'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(pivotX,pivotY); ctx.lineTo(bx,by); ctx.stroke();
+    glowDot(ctx,pivotX,pivotY,3,'#8a9482');
+    glowDot(ctx,bx,by,13,App.accentHex);
+    const speed=Math.abs(s.vel)*p.length;
+    drawArrow(ctx,bx,by,bx+Math.cos(s.angle)*speed*8,by-Math.sin(s.angle)*speed*8,'#ffffff77',1.5);
+  },
+  readouts(s,p){ const T=TAU*Math.sqrt(p.length/p.gravity); return [['الفترة التقريبية',fmt(T,2)+' ث'],['الزاوية الحالية',fmt(s.angle*180/Math.PI,1)+'°'],['السرعة الزاوية',fmt(s.vel,2)+' rad/s']]; }
+});
+
+/* ---------- 3) البندول المزدوج (فوضوي) ---------- */
+defineSim({
+  id:'doublePendulum', category:'mechanics', title:'البندول المزدوج',
+  tagline:'نظام بسيط المعادلات لكنه فوضوي السلوك — حساسية شديدة للشروط الابتدائية.',
+  description:'بإضافة مفصل ثانٍ لبندول بسيط نحصل على نظام لا خطي تمامًا. شغّل توأمًا بفارق ابتدائي ضئيل جدًا (أقل من جزء من الألف من الدرجة) وراقب كيف يفترق المساران كليًا خلال ثوانٍ معدودة — وهو جوهر «تأثير الفراشة».',
+  formula:'θ1\'\' , θ2\'\' من معادلات لاغرانج غير الخطية',
+  laws:[
+    '<b>الحتمية لا تعني التنبؤ:</b> المعادلات حتمية تمامًا لكن أي خطأ ضئيل بالقياس يكبر أسيًا.',
+    '<b>تأثير الفراشة:</b> فارق ابتدائي صغير جدًا يؤدي لمسارات مختلفة كليًا بعد وقت قصير.',
+    '<b>حفظ الطاقة:</b> رغم الفوضى، الطاقة الكلية للنظام (بلا تخامد) تبقى ثابتة.'
+  ],
+  hint:'فعّل «توأم الحساسية» لمشاهدة الافتراق الفوضوي بصريًا',
+  substeps:4,
+  params:[
+    {key:'L1', label:'الطول الأول L1', min:0.5,max:1.6,step:0.05,value:1,unit:' م',dec:2},
+    {key:'L2', label:'الطول الثاني L2', min:0.5,max:1.6,step:0.05,value:1,unit:' م',dec:2},
+    {key:'m1', label:'الكتلة الأولى', min:0.3,max:3,step:0.1,value:1,unit:' kg',dec:1},
+    {key:'m2', label:'الكتلة الثانية', min:0.3,max:3,step:0.1,value:1,unit:' kg',dec:1},
+    {key:'gravity', label:'الجاذبية g', min:1,max:25,step:0.1,value:9.8,unit:' م/ث²',dec:1},
+    {key:'twin', label:'توأم الحساسية', type:'bool', value:true},
+  ],
+  init(){ return {y:[2.05,0,1.9,0], yT:[2.0501,0,1.9,0], trail:[], trailT:[], t:0}; },
+  deriv(y,p){
+    const [a1,w1,a2,w2]=y, g=p.gravity, m1=p.m1,m2=p.m2,L1=p.L1,L2=p.L2, d=a1-a2;
+    const den=(2*m1+m2-m2*Math.cos(2*d));
+    const num1=-g*(2*m1+m2)*Math.sin(a1)-m2*g*Math.sin(a1-2*a2)-2*Math.sin(d)*m2*(w2*w2*L2+w1*w1*L1*Math.cos(d));
+    const w1p=num1/(L1*den);
+    const num2=2*Math.sin(d)*(w1*w1*L1*(m1+m2)+g*(m1+m2)*Math.cos(a1)+w2*w2*L2*m2*Math.cos(d));
+    const w2p=num2/(L2*den);
+    return [w1,w1p,w2,w2p];
+  },
+  step(s,p,dt){
+    s.y=rk4Step(s.y,dt,yy=>this.deriv(yy,p));
+    if(p.twin){ s.yT=rk4Step(s.yT,dt,yy=>this.deriv(yy,p)); }
+    s.t+=dt;
+    const L1=p.L1,L2=p.L2, scale=1;
+    const bx2=L1*Math.sin(s.y[0])+L2*Math.sin(s.y[2]), by2=L1*Math.cos(s.y[0])+L2*Math.cos(s.y[2]);
+    s.trail.push([bx2,by2]); if(s.trail.length>700) s.trail.shift();
+    if(p.twin){ const tx2=L1*Math.sin(s.yT[0])+L2*Math.sin(s.yT[2]), ty2=L1*Math.cos(s.yT[0])+L2*Math.cos(s.yT[2]); s.trailT.push([tx2,ty2]); if(s.trailT.length>700) s.trailT.shift(); }
+  },
+  draw(ctx,s,p,{CW,CH}){
+    const pivotX=CW/2, pivotY=44;
+    const px2m=Math.min(CH-90,CW)/(2*(p.L1+p.L2))*0.95;
+    const X=(m)=>pivotX+m*px2m, Y=(m)=>pivotY+m*px2m;
+    grid(ctx,CW,CH,30,'#1d241a');
+    function drawArm(y,color,alpha){
+      const x1=X(p.L1*Math.sin(y[0])), y1=Y(p.L1*Math.cos(y[0]));
+      const x2=X(p.L1*Math.sin(y[0])+p.L2*Math.sin(y[2])), y2=Y(p.L1*Math.cos(y[0])+p.L2*Math.cos(y[2]));
+      ctx.globalAlpha=alpha;
+      ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(pivotX,pivotY); ctx.lineTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      glowDot(ctx,x1,y1,6,color); glowDot(ctx,x2,y2,8,color);
+      ctx.globalAlpha=1;
+      return [x2,y2];
+    }
+    if(p.twin && s.trailT.length>1){ ctx.strokeStyle=hexA('#ffffff',0.18); ctx.lineWidth=1.2; ctx.beginPath(); s.trailT.forEach(([mx,my],i)=>{ const px=X(mx),py=Y(my); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); }); ctx.stroke(); }
+    if(s.trail.length>1){ ctx.strokeStyle=hexA(App.accentHex,0.35); ctx.lineWidth=1.4; ctx.beginPath(); s.trail.forEach(([mx,my],i)=>{ const px=X(mx),py=Y(my); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); }); ctx.stroke(); }
+    glowDot(ctx,pivotX,pivotY,3,'#8a9482');
+    if(p.twin) drawArm(s.yT,'#ffffff',0.55);
+    drawArm(s.y,App.accentHex,1);
+  },
+  readouts(s,p){
+    let dist=0;
+    if(p.twin){ const a=[p.L1*Math.sin(s.y[0])+p.L2*Math.sin(s.y[2]),p.L1*Math.cos(s.y[0])+p.L2*Math.cos(s.y[2])]; const b=[p.L1*Math.sin(s.yT[0])+p.L2*Math.sin(s.yT[2]),p.L1*Math.cos(s.yT[0])+p.L2*Math.cos(s.yT[2])]; dist=vlen(a[0]-b[0],a[1]-b[1]); }
+    return [['الزمن',fmt(s.t,1)+' ث'], ['زاوية1',fmt(s.y[0]*180/Math.PI,0)+'°'],['زاوية2',fmt(s.y[2]*180/Math.PI,0)+'°']].concat(p.twin?[['افتراق التوأم',fmt(dist*1000,1)+' مم']]:[]);
+  }
+});
+
+/* ---------- 4) نظام الكتلة والزنبرك ---------- */
+defineSim({
+  id:'springMass', category:'mechanics', title:'نظام الكتلة والزنبرك',
+  tagline:'حركة توافقية بسيطة، مخمّدة، أو مدفوعة بقوة خارجية لإظهار الرنين.',
+  description:'كتلة معلّقة بزنبرك تتذبذب حول وضع الاتزان وفق قانون هوك. بإضافة تخامد تتلاشى الذبذبة تدريجيًا، وبإضافة قوة دافعة دورية يمكن الوصول إلى الرنين حين تقترب تردد الدفع من التردد الطبيعي للنظام فترتفع السعة بشدة.',
+  formula:'m x\'\' + c x\' + k x = F0 cos(ωd t)',
+  laws:[
+    '<b>قانون هوك:</b> القوة المعيدة تتناسب طرديًا مع الإزاحة وعكسيًا باتجاهها: F=−kx.',
+    '<b>التردد الطبيعي:</b> ω0=√(k/m)، وهو معدل التذبذب الحر دون تخامد أو دفع.',
+    '<b>الرنين:</b> أقصى استجابة تحدث حين يقترب تردد الدفع ωd من ω0.'
+  ],
+  hint:'اضبط تردد الدفع قريبًا من التردد الطبيعي لمشاهدة الرنين',
+  params:[
+    {key:'k', label:'ثابت الزنبرك k', min:2,max:100,step:1,value:25,unit:' N/m',dec:0},
+    {key:'mass', label:'الكتلة m', min:0.2,max:5,step:0.1,value:1,unit:' kg',dec:1},
+    {key:'damping', label:'معامل التخامد c', min:0,max:3,step:0.05,value:0.2,dec:2},
+    {key:'drive', label:'سعة القوة الدافعة', min:0,max:30,step:1,value:0,unit:' N',dec:0},
+    {key:'driveFreq', label:'تردد الدفع', min:0.1,max:4,step:0.05,value:1,unit:' Hz',dec:2},
+  ],
+  init(){ return {x:1.2,v:0,t:0,hist:[]}; },
+  step(s,p,dt){
+    const wd=TAU*p.driveFreq;
+    const F=p.drive*Math.cos(wd*s.t);
+    const a=(F-p.damping*s.v-p.k*s.x)/p.mass;
+    s.v+=a*dt; s.x+=s.v*dt; s.t+=dt;
+    s.hist.push(s.x); if(s.hist.length>400) s.hist.shift();
+  },
+  draw(ctx,s,p,{CW,CH}){
+    const topH=CH*0.62;
+    grid(ctx,CW,topH,30,'#1d241a');
+    const midX=CW/2, ceilY=20, scale=Math.min(120,(topH-120));
+    const massY=ceilY+90+s.x*scale*0.55;
+    ctx.fillStyle='#2a3324'; ctx.fillRect(midX-60,ceilY-8,120,8);
+    ctx.strokeStyle='#8a9482'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(midX,ceilY);
+    const coils=12; const segH=(massY-26-ceilY)/coils;
+    for(let i=0;i<=coils;i++){ const yy=ceilY+i*segH; const xx=midX+(i%2===0?-18:18)*(i>0&&i<coils?1:0.001); ctx.lineTo(xx,yy); }
+    ctx.lineTo(midX,massY-26); ctx.stroke();
+    ctx.fillStyle=App.accentHex; ctx.shadowColor=App.accentHex; ctx.shadowBlur=18;
+    ctx.fillRect(midX-26,massY-26,52,52); ctx.shadowBlur=0;
+    ctx.strokeStyle='#3a4a37'; ctx.setLineDash([3,5]); ctx.beginPath(); ctx.moveTo(midX,ceilY+90); ctx.lineTo(CW,ceilY+90); ctx.stroke(); ctx.setLineDash([]);
+    // مخطط الإزاحة-الزمن
+    const gy0=topH+16, gh=CH-topH-30;
+    ctx.strokeStyle='#232c20'; ctx.strokeRect(20,gy0,CW-40,gh);
+    ctx.strokeStyle=App.accentHex; ctx.lineWidth=1.5; ctx.beginPath();
+    s.hist.forEach((xv,i)=>{ const px=20+(CW-40)*(i/400), py=gy0+gh/2-xv*(gh/2/2.2); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+    ctx.stroke();
+    ctx.strokeStyle='#3a4a37'; ctx.beginPath(); ctx.moveTo(20,gy0+gh/2); ctx.lineTo(CW-20,gy0+gh/2); ctx.stroke();
+    ctx.fillStyle='#5e6b5c'; ctx.font='10px var(--font-mono)'; ctx.textAlign='start'; ctx.fillText('x(t)',26,gy0+13);
+  },
+  readouts(s,p){ const w0=Math.sqrt(p.k/p.mass); return [['التردد الطبيعي',fmt(w0/TAU,2)+' Hz'],['الإزاحة',fmt(s.x,2)+' م'],['الطاقة الكلية',fmt(0.5*p.mass*s.v*s.v+0.5*p.k*s.x*s.x,1)+' J']]; }
+});
+
+/* ---------- 5) تصادم الأجسام (2D) ---------- */
+defineSim({
+  id:'collisions2d', category:'mechanics', title:'تصادم الأجسام في صندوق',
+  tagline:'تصادمات مرنة/غير مرنة بين عدة كرات وحفظ الزخم.',
+  description:'كل كرة لها كتلة تتناسب مع مساحتها. عند التصادم تُحسب الاندفاعات وفق معامل الارتداد المختار: عند 1 يكون التصادم مرنًا تمامًا (حفظ الطاقة الحركية)، وعند القيم الأقل تُفقد طاقة حركية في كل اصطدام (تصادم غير مرن).',
+  formula:'p = Σ m·v محفوظة دائمًا، Ek محفوظة فقط عند e=1',
+  laws:[
+    '<b>حفظ الزخم الخطي:</b> الزخم الكلي للنظام المعزول ثابت قبل وبعد أي تصادم.',
+    '<b>معامل الارتداد e:</b> يحدد نسبة السرعة النسبية المرتدة بعد التصادم إلى ما قبله.',
+    '<b>عند e=1:</b> الطاقة الحركية الكلية تُحفظ أيضًا (تصادم مرن مثالي).'
+  ],
+  params:[
+    {key:'count', label:'عدد الكرات', min:3,max:25,step:1,value:12,unit:'',dec:0},
+    {key:'restitution', label:'معامل الارتداد e', min:0.2,max:1,step:0.02,value:1,dec:2},
+    {key:'gravity', label:'جاذبية', type:'bool', value:false},
+  ],
+  init(p,dims){
+    const W=(dims&&dims.CW)||700, H=(dims&&dims.CH)||400;
+    const balls=[];
+    for(let i=0;i<p.count;i++){
+      const r=rand(8,20);
+      balls.push({x:rand(r,W-r),y:rand(r,H-r),vx:rand(-160,160),vy:rand(-160,160),r,m:r*r});
+    }
+    return {balls};
+  },
+  step(s,p,dt,{CW,CH}){
+    const g = p.gravity?260:0;
+    s.balls.forEach(b=>{
+      b.vy+=g*dt; b.x+=b.vx*dt; b.y+=b.vy*dt;
+      if(b.x-b.r<0){ b.x=b.r; b.vx=Math.abs(b.vx)*p.restitution; }
+      if(b.x+b.r>CW){ b.x=CW-b.r; b.vx=-Math.abs(b.vx)*p.restitution; }
+      if(b.y-b.r<0){ b.y=b.r; b.vy=Math.abs(b.vy)*p.restitution; }
+      if(b.y+b.r>CH){ b.y=CH-b.r; b.vy=-Math.abs(b.vy)*p.restitution; }
+    });
+    const n=s.balls.length;
+    for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){
+      const a=s.balls[i], b=s.balls[j];
+      const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy), minD=a.r+b.r;
+      if(d>0 && d<minD){
+        const nx=dx/d, ny=dy/d, overlap=(minD-d)/2;
+        a.x-=nx*overlap; a.y-=ny*overlap; b.x+=nx*overlap; b.y+=ny*overlap;
+        const rvx=b.vx-a.vx, rvy=b.vy-a.vy, rel=rvx*nx+rvy*ny;
+        if(rel<0){
+          const e=p.restitution, jimp=-(1+e)*rel/(1/a.m+1/b.m);
+          a.vx-=jimp/a.m*nx; a.vy-=jimp/a.m*ny; b.vx+=jimp/b.m*nx; b.vy+=jimp/b.m*ny;
+        }
+      }
+    }
+  },
+  draw(ctx,s,p,{CW,CH}){
+    grid(ctx,CW,CH,32,'#1c241b');
+    s.balls.forEach(b=>{
+      const sp=clamp(vlen(b.vx,b.vy)/260,0,1);
+      const col=shade(App.accentHex, sp*0.5-0.15);
+      ctx.fillStyle=hexA(col,0.92); ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,TAU); ctx.fill();
+      ctx.strokeStyle=hexA('#000000',0.4); ctx.lineWidth=1; ctx.stroke();
+    });
+  },
+  readouts(s){
+    const Ek=s.balls.reduce((a,b)=>a+0.5*b.m*(b.vx*b.vx+b.vy*b.vy),0)/2000;
+    const avg=s.balls.reduce((a,b)=>a+vlen(b.vx,b.vy),0)/s.balls.length;
+    return [['عدد الكرات',s.balls.length],['الطاقة الحركية',fmt(Ek,1)],['متوسط السرعة',fmt(avg,0)+' px/s']];
+  }
+});
+
+/* ---------- 6) مهد نيوتن ---------- */
+defineSim({
+  id:'newtonsCradle', category:'mechanics', title:'مهد نيوتن',
+  tagline:'انتقال الزخم عبر سلسلة من الكرات المتلامسة.',
+  description:'حين تُرفع كرة (أو أكثر) وتُترك تتأرجح فإنها تنقل زخمها فور اصطدامها بسلسلة الكرات الساكنة، فترتد العدد نفسه من الكرات من الطرف الآخر بنفس السرعة تقريبًا — في حين تبقى الكرات الوسطى شبه ساكنة، وهو دليل حي على حفظ الزخم والطاقة معًا.',
+  formula:'Σ m v محفوظة وΣ ½mv² محفوظة (تصادم شبه مرن)',
+  laws:[
+    '<b>حفظ الزخم والطاقة معًا:</b> الحل الوحيد المتوافق مع كرات متساوية الكتلة هو خروج العدد نفسه من الكرات بالسرعة نفسها.',
+    '<b>البندول البسيط:</b> كل مجموعة كرات مرفوعة تتبع معادلة البندول إلى أن تلامس السلسلة الساكنة.',
+  ],
+  params:[
+    {key:'ballCount', label:'عدد الكرات', min:3,max:7,step:1,value:5,unit:'',dec:0},
+    {key:'pullCount', label:'كرات مرفوعة بكل طرف', min:1,max:3,step:1,value:1,unit:'',dec:0},
+    {key:'pullAngle', label:'زاوية الرفع', min:10,max:65,step:1,value:38,unit:'°',dec:0},
+    {key:'damping', label:'التخامد', min:0,max:0.04,step:0.002,value:0.006,dec:3},
+  ],
+  init(p){
+    const n=p.ballCount, pull=Math.max(1,Math.min(p.pullCount,Math.floor((n-1)/2),3));
+    return {n,pull,angL:-p.pullAngle*Math.PI/180,velL:0,angR:0,velR:0,L:1};
+  },
+  step(s,p,dt){
+    const g=9.8, lenPx=1;
+    const accL=-(g/s.L)*Math.sin(s.angL)-p.damping*s.velL;
+    const accR=-(g/s.L)*Math.sin(s.angR)-p.damping*s.velR;
+    s.velL+=accL*dt; s.angL+=s.velL*dt;
+    s.velR+=accR*dt; s.angR+=s.velR*dt;
+    if(s.angL>0 && s.velL>0){ s.velR=s.velL; s.angL=0; s.velL=0; }
+    if(s.angR<0 && s.velR<0){ s.velL=s.velR; s.angR=0; s.velR=0; }
+  },
+  draw(ctx,s,p,{CW,CH}){
+    grid(ctx,CW,CH,30,'#1d241a');
+    const n=s.n, pull=s.pull, rest=n-2*pull;
+    const ballR=Math.min(26,(CW-80)/n/2.2);
+    const totalW=n*ballR*2;
+    const startX=CW/2-totalW/2+ballR;
+    const pivotY=34, Lpx=Math.min(CH-110,210);
+    ctx.fillStyle='#2a3324'; ctx.fillRect(startX-ballR-6,pivotY-8,totalW+ballR*2+12,8);
+    for(let i=0;i<n;i++){
+      const cx0=startX+i*ballR*2;
+      let ang=0;
+      if(i<pull) ang=s.angL; else if(i>=n-pull) ang=s.angR;
+      const bx=cx0+Math.sin(ang)*Lpx, by=pivotY+Math.cos(ang)*Lpx;
+      ctx.strokeStyle='#5c6856'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(cx0,pivotY); ctx.lineTo(bx,by); ctx.stroke();
+      const moving=(i<pull&&Math.abs(s.angL)>0.01)||(i>=n-pull&&Math.abs(s.angR)>0.01);
+      glowDot(ctx,bx,by,ballR,moving?App.accentHex:'#9aa494');
+    }
+  },
+  readouts(s){ return [['زاوية اليسار',fmt(Math.abs(s.angL)*180/Math.PI,0)+'°'],['زاوية اليمين',fmt(Math.abs(s.angR)*180/Math.PI,0)+'°']]; }
+});
+
+/* ---------- 7) المستوى المائل والاحتكاك ---------- */
+defineSim({
+  id:'inclinedPlane', category:'mechanics', title:'المستوى المائل والاحتكاك',
+  tagline:'متى ينزلق جسم على سطح مائل، ومتى يبقى ثابتًا بفعل الاحتكاك الساكن؟',
+  description:'يقارن المستوى المائل بين مركبتي الوزن: الموازية للسطح (mg sinθ) والعمودية عليه (mg cosθ). إن كانت قوة الاحتكاك الساكن الأعظمية أكبر من المركبة الموازية يبقى الجسم ساكنًا، وإلا ينزلق بتسارع يحدده الاحتكاك الحركي.',
+  formula:'a = g(sinθ − μk cosθ)   إذا tanθ > μs',
+  laws:[
+    '<b>شرط الانزلاق:</b> الجسم يبدأ بالانزلاق فقط إذا tan(θ) > μs.',
+    '<b>الاحتكاك الحركي أقل عادة من الساكن:</b> μk ≤ μs غالبًا، لذا يستمر الانزلاق بعد بدئه حتى عند زوايا أقل قليلًا.',
+  ],
+  params:[
+    {key:'angle', label:'زاوية الميل', min:0,max:60,step:1,value:30,unit:'°',dec:0},
+    {key:'muS', label:'معامل الاحتكاك الساكن μs', min:0,max:1,step:0.02,value:0.45,dec:2},
+    {key:'muK', label:'معامل الاحتكاك الحركي μk', min:0,max:1,step:0.02,value:0.32,dec:2},
+    {key:'mass', label:'الكتلة', min:0.5,max:10,step:0.5,value:2,unit:' kg',dec:1},
+  ],
+  init(){ return {pos:0,vel:0,t:0}; },
+  step(s,p,dt){
+    const g=9.8, th=p.angle*Math.PI/180;
+    const sliding=Math.tan(th)>p.muS || s.pos>0.001;
+    if(sliding){ const a=g*(Math.sin(th)-p.muK*Math.cos(th)); s.vel=Math.max(0,s.vel+a*dt); s.pos+=s.vel*dt; if(s.pos>6){ s.pos=0; s.vel=0; } }
+    else { s.vel=0; }
+    s.t+=dt; s.sliding=sliding;
+  },
+  draw(ctx,s,p,{CW,CH}){
+    grid(ctx,CW,CH,30,'#1d241a');
+    const th=p.angle*Math.PI/180;
+    const baseX=70, baseY=CH-50, L=Math.min(CW-110,440);
+    const topX=baseX+L*Math.cos(th), topY=baseY-L*Math.sin(th);
+    ctx.fillStyle='#1a2117'; ctx.beginPath(); ctx.moveTo(baseX,baseY); ctx.lineTo(baseX+L,baseY); ctx.lineTo(topX,topY); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#46523d'; ctx.lineWidth=2; ctx.stroke();
+    const along=clamp(s.pos/6,0,1);
+    const bx=topX+(baseX-topX)*along, by=topY+(baseY-topY)*along;
+    const boxSize=28;
+    const nx=-Math.sin(th), ny=-Math.cos(th);
+    const cx=bx+nx*boxSize*0.6, cy=by+ny*boxSize*0.6;
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(-th);
+    ctx.fillStyle=App.accentHex; ctx.shadowColor=App.accentHex; ctx.shadowBlur=16; ctx.fillRect(-boxSize/2,-boxSize/2,boxSize,boxSize); ctx.shadowBlur=0;
+    ctx.restore();
+    const W=p.mass*9.8*5;
+    drawArrow(ctx,cx,cy,cx,cy+W*0.6,'#ffffff88',1.5);
+    drawArrow(ctx,cx,cy,cx+nx*W*0.5,cy+ny*W*0.5,'#4FD8E8aa',1.5);
+    if(s.sliding){ const dirx=Math.cos(th),diry=-Math.sin(th); drawArrow(ctx,cx,cy,cx-dirx*W*0.35,cy-diry*W*0.35,'#FF6FA5aa',1.5); }
+    ctx.fillStyle=s.sliding?'#FF6FA5':'#8CFF8A'; ctx.font='600 12px var(--font-ar)'; ctx.textAlign='center';
+    ctx.fillText(s.sliding?'⟶ منزلق':'⏸ ثابت بفعل الاحتكاك', (baseX+topX)/2, baseY+24);
+  },
+  readouts(s,p){ const th=p.angle*Math.PI/180; return [['الحالة',s.sliding?'انزلاق':'سكون'],['mg sinθ',fmt(p.mass*9.8*Math.sin(th),1)+' N'],['μs mg cosθ',fmt(p.muS*p.mass*9.8*Math.cos(th),1)+' N']]; }
+});
+
+/* ---------- 8) الحركة الدائرية ---------- */
+defineSim({
+  id:'circularMotion', category:'mechanics', title:'الحركة الدائرية المنتظمة',
+  tagline:'قوة مركزية ثابتة الاتجاه نحو المركز تحافظ على المسار الدائري.',
+  description:'حتى في غياب أي تغيّر بمقدار السرعة، يتغيّر اتجاهها باستمرار، أي أن هناك تسارعًا — هو التسارع المركزي الموجّه دائمًا نحو مركز الدائرة. القوة اللازمة لإحداث هذا التسارع تسمى القوة المركزية، وهي ليست قوة مستقلة بل محصلة قوى أخرى (شد خيط، جاذبية، احتكاك...).',
+  formula:'Fc = m ω² r = m v² / r',
+  laws:[
+    '<b>التسارع المركزي:</b> يتجه دائمًا نحو المركز وعموديًا على السرعة اللحظية.',
+    '<b>القوة المركزية ليست قوة جديدة:</b> هي تسمية لمحصلة القوى الفعلية التي تسبب الانحناء الدائري.',
+  ],
+  params:[
+    {key:'radius', label:'نصف القطر r', min:0.5,max:5,step:0.1,value:2,unit:' م',dec:1},
+    {key:'omega', label:'السرعة الزاوية ω', min:0.2,max:8,step:0.1,value:2,unit:' rad/s',dec:1},
+    {key:'mass', label:'الكتلة', min:0.2,max:5,step:0.1,value:1,unit:' kg',dec:1},
+  ],
+  init(){ return {theta:0}; },
+  step(s,p,dt){ s.theta+=p.omega*dt; },
+  draw(ctx,s,p,{CW,CH}){
+    grid(ctx,CW,CH,30,'#1d241a');
+    const cx=CW/2, cy=CH/2, scale=Math.min(CW,CH)*0.36/p.radius;
+    const Rpx=p.radius*scale;
+    ctx.strokeStyle='#3a4a37'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(cx,cy,Rpx,0,TAU); ctx.stroke();
+    glowDot(ctx,cx,cy,3,'#8a9482');
+    const bx=cx+Math.cos(s.theta)*Rpx, by=cy+Math.sin(s.theta)*Rpx;
+    ctx.strokeStyle='#46523d'; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(bx,by); ctx.stroke();
+    const v=p.omega*p.radius;
+    drawArrow(ctx,bx,by,bx-Math.sin(s.theta)*v*9,by+Math.cos(s.theta)*v*9,'#ffffff99',1.6);
+    drawArrow(ctx,bx,by,bx+(cx-bx)*0.35,by+(cy-by)*0.35,App.accentHex,2);
+    glowDot(ctx,bx,by,9,App.accentHex);
+  },
+  readouts(s,p){ const v=p.omega*p.radius, Fc=p.mass*p.omega*p.omega*p.radius, T=TAU/p.omega; return [['الفترة T',fmt(T,2)+' ث'],['السرعة الخطية',fmt(v,2)+' م/ث'],['القوة المركزية',fmt(Fc,2)+' N']]; }
+});
+
+/* ═══════════════════════════════════════════
+   GRAVITY & ASTRONOMY
+   ═══════════════════════════════════════════ */
+
+/* ---------- 9) جاذبية نيوتن — جسمان ---------- */
+defineSim({
+  id:'twoBody', category:'gravity', title:'جاذبية نيوتن — جسمان',
+  tagline:'مدارات بيضاوية، قطعية مكافئة أو زائدة تبعًا لسرعة الانطلاق.',
+  description:'جسمان يتجاذبان وفق قانون التربيع العكسي. السرعة المدارية الابتدائية تحدد شكل المدار: دائري عند سرعة محددة، بيضاوي ضمن نطاق، ومفتوح (زائدة، مكافئة) عند سرعة الإفلات أو أكثر.',
+  formula:'F = G m₁m₂ / r²',
+  laws:[
+    '<b>قانون كيبلر الثاني:</b> الجسم المتحرك يجتاف مساحات متساوية في أزمنة متساوية — يتسارع قرب المركز ويتباطأ بعيدًا.',
+    '<b>سرعة الإفلات:</b> ve = √(2GM/r) — فوقها يصبح المدار مفتوحًا.',
+    '<b>حفظ طاقة المجموعة:</b> KE + PE = const في غياب الاحتكاك.'
+  ],
+  hint:'غيّر السرعة الابتدائية لتغيير شكل المدار من دائري إلى زائدي',
+  substeps:8,
+  params:[
+    {key:'initSpeed', label:'السرعة الابتدائية (نسبة من المدارية)', min:0.2,max:2.5,step:0.05,value:1,dec:2},
+    {key:'M', label:'كتلة النجم (ضخامة)', min:1,max:5,step:0.2,value:2,unit:'×',dec:1},
+    {key:'trail', label:'إظهار المسار', type:'bool', value:true},
+  ],
+  init(p,{CW,CH}){
+    const G=100, M=p.M*8000;
+    const r0=Math.min(CW,CH)*0.22;
+    const vCirc=Math.sqrt(G*M/r0);
+    return {
+      x:r0, y:0, vx:0, vy:p.initSpeed*vCirc,
+      G, M, trail:[], t:0,
+      cx:0, cy:0
+    };
+  },
+  step(s,p,dt){
+    const r2=s.x*s.x+s.y*s.y, r=Math.sqrt(r2)||0.1;
+    const f=s.G*s.M/(r2);
+    const ax=-f*s.x/r, ay=-f*s.y/r;
+    s.vx+=ax*dt; s.vy+=ay*dt; s.x+=s.vx*dt; s.y+=s.vy*dt; s.t+=dt;
+    if(p.trail){ s.trail.push([s.x,s.y]); if(s.trail.length>1800) s.trail.shift(); }
+    else s.trail=[];
+    if(r>1200) { s.x=0; s.y=Math.min(CW||300,CH||200)*0.22; s.vx=Math.sqrt(s.G*s.M/Math.abs(s.y))*p.initSpeed; s.vy=0; s.trail=[]; }
+  },
+  draw(ctx,s,p,{CW,CH}){
+    const cx=CW/2, cy=CH/2;
+    grid(ctx,CW,CH,36,'#161e1f');
+    glowDot(ctx,cx,cy,Math.min(24,p.M*9),hexA('#8C93FF',0.15));
+    glowDot(ctx,cx,cy,Math.min(18,p.M*6),'#8C93FF');
+    if(s.trail.length>1){
+      ctx.beginPath(); ctx.strokeStyle=hexA(App.accentHex,0.5); ctx.lineWidth=1.4;
+      s.trail.forEach(([tx,ty],i)=>{ const px=cx+tx,py=cy+ty; i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+      ctx.stroke();
+    }
+    glowDot(ctx,cx+s.x,cy+s.y,7,App.accentHex);
+    const spd=vlen(s.vx,s.vy);
+    drawArrow(ctx,cx+s.x,cy+s.y,cx+s.x+s.vx/spd*22,cy+s.y+s.vy/spd*22,'#ffffff88',1.4);
+  },
+  readouts(s){
+    const r=vlen(s.x,s.y), spd=vlen(s.vx,s.vy);
+    const E=0.5*spd*spd - s.G*s.M/r;
+    const type=E<-0.1?'بيضاوي':E<0.1?'مكافئ':'زائدي';
+    return [['نوع المدار',type],['المسافة',fmt(r,0)+' وحدة'],['السرعة',fmt(spd,1)],['الطاقة الكلية',fmt(E,0)]];
+  }
+});
+
+/* ---------- 10) المجموعة الشمسية النسبية ---------- */
+defineSim({
+  id:'solarSystem', category:'gravity', title:'نموذج المجموعة الشمسية',
+  tagline:'الكواكب الثمانية تدور وفق جاذبية نيوتن وقوانين كيبلر.',
+  description:'نموذج مبسّط للمجموعة الشمسية يُظهر المدارات الحقيقية النسبية للكواكب الثمانية. الكواكب تتأثر فقط بجاذبية الشمس (بإهمال التجاذبات البينية الكوكبية تبسيطًا). لاحظ اتساع الفجوة بين المجموعتين الداخلية والخارجية.',
+  formula:'T² ∝ a³  (قانون كيبلر الثالث)',
+  laws:[
+    '<b>قانون كيبلر الثالث:</b> مربع الفترة المدارية يتناسب مع مكعب نصف المحور الرئيسي.',
+    '<b>قانون كيبلر الأول:</b> كل كوكب يسير في مدار بيضاوي تقع الشمس في إحدى بؤرتيه.',
+  ],
+  params:[
+    {key:'speed', label:'سرعة المحاكاة', min:0.1,max:8,step:0.1,value:2,unit:'×',dec:1},
+    {key:'inner', label:'المجموعة الداخلية فقط', type:'bool', value:false},
+    {key:'labels', label:'أسماء الكواكب', type:'bool', value:true},
+  ],
+  init(){
+    const AU=1;
+    const planets=[
+      {name:'عطارد',a:0.387,e:0.206,T:0.241,r:3,col:'#b5b5b5',angle:0},
+      {name:'الزهرة',a:0.723,e:0.007,T:0.615,r:5,col:'#e8c97a',angle:1.1},
+      {name:'الأرض',a:1.000,e:0.017,T:1.000,r:5.5,col:'#4fc3e8',angle:2.4},
+      {name:'المريخ',a:1.524,e:0.093,T:1.881,r:4,col:'#e8834a',angle:0.7},
+      {name:'المشتري',a:5.203,e:0.049,T:11.86,r:12,col:'#c49a6c',angle:1.8},
+      {name:'زحل',a:9.537,e:0.057,T:29.46,r:10,col:'#d4b896',angle:3.2},
+      {name:'أورانوس',a:19.19,e:0.046,T:84.01,r:7,col:'#85d6d6',angle:0.5},
+      {name:'نبتون',a:30.07,e:0.010,T:164.8,r:6.5,col:'#5b6eb5',angle:4.1},
+    ];
+    planets.forEach(pl=>{ pl.angle*=Math.random()+0.2; });
+    return {planets, t:0};
+  },
+  step(s,p,dt){ s.t+=dt*p.speed; s.planets.forEach(pl=>{ pl.angle+=TAU/pl.T*dt*p.speed*0.2; }); },
+  draw(ctx,s,p,{CW,CH}){
+    const cx=CW/2, cy=CH/2;
+    ctx.fillStyle='#0a0d0f'; ctx.fillRect(0,0,CW,CH);
+    for(let i=0;i<130;i++){
+      const px=((i*93+17)%CW), py=((i*137+53)%CH);
+      const brt=0.3+0.5*(Math.sin(i*7.3+s.t*0.4)*0.5+0.5);
+      ctx.fillStyle=hexA('#ffffff',brt*0.5); ctx.beginPath(); ctx.arc(px,py,0.7,0,TAU); ctx.fill();
+    }
+    const limit=p.inner?4:8;
+    const maxA=p.inner?1.7:32;
+    const scale=Math.min(CW,CH)*0.46/maxA;
+    s.planets.slice(0,limit).forEach(pl=>{
+      const b=pl.a*Math.sqrt(1-pl.e*pl.e);
+      ctx.strokeStyle=hexA(pl.col,0.22); ctx.lineWidth=1; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.ellipse(cx,cy,pl.a*scale,b*scale,0,0,TAU); ctx.stroke();
+      const r=pl.a*(1-pl.e*pl.e)/(1+pl.e*Math.cos(pl.angle));
+      const bx=cx+Math.cos(pl.angle)*r*scale, by=cy+Math.sin(pl.angle)*r*scale;
+      glowDot(ctx,bx,by,pl.r,pl.col);
+      if(p.labels){
+        ctx.fillStyle=hexA(pl.col,0.8); ctx.font=`10px var(--font-ar)`; ctx.textAlign='center';
+        ctx.fillText(pl.name,bx,by-pl.r-5);
+      }
+    });
+    glowDot(ctx,cx,cy,16,'#FFF4A0');
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,28);
+    g.addColorStop(0,hexA('#FFE875',0.35)); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,28,0,TAU); ctx.fill();
+  },
+  readouts(s,p){ return [['عدد الكواكب المرئية',p.inner?4:8],['وقت المحاكاة',fmt(s.t,1)+' ث']]; }
+});
+
+/* ---------- 11) مشكلة الأجسام الثلاثة ---------- */
+defineSim({
+  id:'threeBody', category:'gravity', title:'مشكلة الأجسام الثلاثة',
+  tagline:'ثلاثة أجرام تتجاذب بالجاذبية — نظام فوضوي بلا حل تحليلي عام.',
+  description:'رغم أن معادلات الحركة بسيطة (جاذبية نيوتن بين كل زوجين)، فإن الحل العام لثلاثة أجسام متحررة يكون فوضويًا تمامًا ولا حل تحليليًا عامًا له. بعض التكوينات تُعطي مدارات دورية استثنائية، لكن معظمها غير مستقر.',
+  formula:'F_ij = G m_i m_j / r_ij²',
+  laws:[
+    '<b>لا يوجد حل مغلق عام:</b> أثبت بوانكاريه عام 1887 استحالة الحل التحليلي العام لثلاثة أجسام فأكثر.',
+    '<b>تبادل الطاقة:</b> الأجسام تتبادل الزخم والطاقة باستمرار مما يؤدي لمسارات غير منتظمة.',
+  ],
+  hint:'اضغط على الشاشة لوضع جسم ثالث في موضع مخصص',
+  substeps:6,
+  params:[
+    {key:'preset', label:'التكوين', type:'choice', value:'figure8',
+     choices:[{value:'figure8',label:'رقم 8'},{value:'lagrange',label:'لاغرانج'},{value:'random',label:'عشوائي'}]},
+    {key:'G', label:'ثابت الجاذبية G', min:20,max:400,step:10,value:120,dec:0},
+    {key:'trail', label:'مسارات', type:'bool', value:true},
+  ],
+  init(p){
+    let bodies;
+    if(p.preset==='figure8'){
+      const v=1.33; bodies=[
+        {x:-1,y:0,vx:0.347*v,vy:0.533*v,m:150,col:'#8C93FF'},
+        {x:1,y:0,vx:0.347*v,vy:0.533*v,m:150,col:App.accentHex},
+        {x:0,y:0,vx:-0.694*v,vy:-1.066*v,m:150,col:'#FF6FA5'},
+      ];
+    } else if(p.preset==='lagrange'){
+      const a=140, v=60;
+      bodies=[
+        {x:a,y:0,vx:0,vy:v,m:200,col:'#8C93FF'},
+        {x:-a*0.5,y:a*0.866,vx:-v*0.866,vy:-v*0.5,m:200,col:App.accentHex},
+        {x:-a*0.5,y:-a*0.866,vx:v*0.866,vy:-v*0.5,m:200,col:'#FF6FA5'},
+      ];
+    } else {
+      bodies=Array.from({length:3},(_,i)=>({
+        x:rand(-120,120),y:rand(-80,80),vx:rand(-50,50),vy:rand(-50,50),
+        m:rand(80,250),col:['#8C93FF',App.accentHex,'#FF6FA5'][i]
+      }));
+    }
+    bodies.forEach(b=>{ b.trail=[]; });
+    return {bodies, t:0, preset:p.preset};
+  },
+  step(s,p,dt){
+    if(s.preset!==p.preset){ Object.assign(s,this.init(p)); return; }
+    const n=s.bodies, G=p.G;
+    n.forEach(b=>{ b.ax=0; b.ay=0; });
+    for(let i=0;i<n.length;i++) for(let j=i+1;j<n.length;j++){
+      const dx=n[j].x-n[i].x, dy=n[j].y-n[i].y;
+      const r2=dx*dx+dy*dy+4, r=Math.sqrt(r2);
+      const f=G/(r2);
+      const fx=f*dx/r, fy=f*dy/r;
+      n[i].ax+=fx*n[j].m; n[i].ay+=fy*n[j].m;
+      n[j].ax-=fx*n[i].m; n[j].ay-=fy*n[i].m;
+    }
+    n.forEach(b=>{
+      b.vx+=b.ax*dt; b.vy+=b.ay*dt; b.x+=b.vx*dt; b.y+=b.vy*dt;
+      if(p.trail){ b.trail.push([b.x,b.y]); if(b.trail.length>900) b.trail.shift(); }
+    });
+    s.t+=dt;
+  },
+  draw(ctx,s,p,{CW,CH}){
+    const cx=CW/2, cy=CH/2;
+    ctx.fillStyle='#080d08'; ctx.fillRect(0,0,CW,CH);
+    for(let i=0;i<80;i++){ ctx.fillStyle=hexA('#fff',0.25); ctx.beginPath(); ctx.arc((i*137)%CW,(i*93)%CH,0.7,0,TAU); ctx.fill(); }
+    s.bodies.forEach(b=>{
+      if(p.trail && b.trail.length>1){
+        ctx.strokeStyle=hexA(b.col,0.3); ctx.lineWidth=1.2; ctx.beginPath();
+        b.trail.forEach(([tx,ty],i)=>{ const px=cx+tx,py=cy+ty; i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+        ctx.stroke();
+      }
+    });
+    s.bodies.forEach(b=>{ glowDot(ctx,cx+b.x,cy+b.y,Math.cbrt(b.m)*2.2,b.col); });
+  },
+  readouts(s){ const E=s.bodies.reduce((a,b)=>a+0.5*b.m*(b.vx*b.vx+b.vy*b.vy),0); return [['الزمن',fmt(s.t,1)+' ث'],['الطاقة الحركية',fmt(E,0)],['عدد الأجسام',3]]; }
+});
+
+/* ---------- 12) النجم النابض ودوبلر ---------- */
+defineSim({
+  id:'dopplerPulsar', category:'gravity', title:'تأثير دوبلر والنجم النابض',
+  tagline:'كيف يُكشف عن الكواكب الخارجية عبر التحولات الطيفية.',
+  description:'نجم ضخم وكوكب يدوران معًا حول مركز كتلتهما المشترك. الضوء المنبعث من النجم يتحول نحو الأزرق حين يتقدم نحو المراقب ونحو الأحمر حين يبتعد. هذه الطريقة (الانحراف الطيفي) اكتُشف بها أول كوكب خارج المجموعة الشمسية عام 1995.',
+  formula:'Δλ/λ = v/c',
+  laws:[
+    '<b>تأثير دوبلر:</b> يؤثر على الموجات الصوتية والضوئية، إلا أن الموجات الضوئية تستوجب المعالجة النسبية لسرعات كبيرة.',
+    '<b>مركز الكتلة:</b> النجم والكوكب يدوران حول نقطة مشتركة — النجم يتحرك بسرعة أقل بنسبة kتلة الكوكب.',
+  ],
+  params:[
+    {key:'planetMass', label:'كتلة الكوكب (نسبية)', min:0.01,max:0.4,step:0.01,value:0.12,dec:2},
+    {key:'orbitalR', label:'نصف قطر المدار', min:0.5,max:2.5,step:0.1,value:1.2,unit:'×',dec:1},
+    {key:'speed', label:'سرعة المحاكاة', min:0.2,max:4,step:0.1,value:1,unit:'×',dec:1},
+  ],
+  init(){ return {theta:0, spectrum:[]}; },
+  step(s,p,dt){ s.theta+=dt*p.speed*0.8; },
+  draw(ctx,s,p,{CW,CH}){
+    grid(ctx,CW,CH,32,'#0d1215');
+    const cx=CW*0.38, cy=CH*0.42;
+    const R=Math.min(CW,CH)*0.22*p.orbitalR;
+    const mRatio=p.planetMass/(1+p.planetMass);
+    const starX=cx-Math.cos(s.theta)*R*mRatio;
+    const starY=cy-Math.sin(s.theta)*R*mRatio;
+    const planX=cx+Math.cos(s.theta)*R*(1-mRatio);
+    const planY=cy+Math.sin(s.theta)*R*(1-mRatio);
+    const vStar=-Math.sin(s.theta)*0.8*p.speed*mRatio*p.orbitalR;
+    const blueShift=Math.max(-1,Math.min(1,vStar));
+    const r=Math.round(clamp(255*(1+blueShift*0.7),80,255));
+    const b=Math.round(clamp(255*(1-blueShift*0.7),80,255));
+    const starCol=`rgb(${r},${Math.round(lerp(180,240,0.5))},${b})`;
+    ctx.strokeStyle=hexA('#8C93FF',0.15); ctx.lineWidth=1; ctx.beginPath(); ctx.ellipse(cx,cy,R*(1-mRatio),R*(1-mRatio)*0.98,0,0,TAU); ctx.stroke();
+    glowDot(ctx,starX,starY,22,starCol);
+    glowDot(ctx,planX,planY,6,App.accentHex);
+    const obsX=CW*0.88, obsY=cy;
+    ctx.strokeStyle='#3a4a37'; ctx.setLineDash([4,6]); ctx.beginPath(); ctx.moveTo(starX,starY); ctx.lineTo(obsX,obsY); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#5e6b5c'; ctx.font='11px var(--font-ar)'; ctx.textAlign='center'; ctx.fillText('مراقب',obsX,obsY+22);
+    const specX=CW*0.52, specY=CH*0.76, specW=CW*0.43, specH=28;
+    const sg=ctx.createLinearGradient(specX,0,specX+specW,0);
+    sg.addColorStop(0,'#4400ff'); sg.addColorStop(0.2,'#0066ff'); sg.addColorStop(0.4,'#00bbff'); sg.addColorStop(0.5,'#00ff88'); sg.addColorStop(0.7,'#ffff00'); sg.addColorStop(0.85,'#ff6600'); sg.addColorStop(1,'#ff0000');
+    ctx.fillStyle=sg; ctx.fillRect(specX,specY,specW,specH);
+    const lineX=specX+specW*(0.5+blueShift*0.15);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(lineX,specY-4); ctx.lineTo(lineX,specY+specH+4); ctx.stroke();
+    ctx.fillStyle='#ccc'; ctx.font='10px var(--font-mono)'; ctx.textAlign='center';
+    ctx.fillText(blueShift>0.05?'تحول أحمر ↙':blueShift<-0.05?'↗ تحول أزرق':'خط مرجعي',lineX,specY+specH+16);
+  },
+  readouts(s,p){
+    const v=-Math.sin(s.theta)*0.8*p.speed*p.planetMass/(1+p.planetMass)*p.orbitalR;
+    const shift=v.toFixed(2);
+    return [['التحول الطيفي Δλ/λ',shift],['اتجاه النجم',v>0.05?'مبتعد':v<-0.05?'مقترب':'عمودي'],['فترة المدار',fmt(TAU/(0.8*p.speed),1)+' ث']];
+  }
+});
+
+/* ---------- 13) ديناميكا الثقب الأسود — دوامة التراص ---------- */
+defineSim({
+  id:'blackHole', category:'gravity', title:'الثقب الأسود — دوامة الجذب',
+  tagline:'المادة تتراص في دوامة من نجم مرافق نحو قرص التراص.',
+  description:'مادة تُسحب من نجم مرافق تتجمع في قرص تراص دوّامي حول الثقب الأسود. بسبب قانون حفظ العزم الزاوي تتسارع هذه المادة كلما اقتربت، وترتفع حرارتها لدرجات قصوى مُطلِقةً أشعة سينية يمكن رصدها.',
+  formula:'r_s = 2GM/c²  (نصف قطر شفارتزشيلد)',
+  laws:[
+    '<b>حفظ العزم الزاوي:</b> L = m r v = const → سرعة المادة ترتفع كلما قلّ نصف قطر دورانها.',
+    '<b>نصف قطر شفارتزشيلد:</b> عنده يساوي هروب الضوء، وهو حدّ الثقب الأسود.',
+  ],
+  params:[
+    {key:'mass', label:'كتلة الثقب (نسبية)', min:0.5,max:3,step:0.1,value:1.5,unit:'×',dec:1},
+    {key:'accretionRate', label:'معدل التراص', min:0.5,max:3,step:0.1,value:1.5,unit:'×',dec:1},
+  ],
+  init(){ return {particles:[], t:0}; },
+  step(s,p,dt){
+    s.t+=dt;
+    if(Math.random()<0.18*p.accretionRate){
+      const ang=rand(0,TAU), r=rand(180,240), vt=Math.sqrt(120*p.mass/r);
+      s.particles.push({r,ang,vr:rand(-4,0),vt,life:1,col:Math.random()>0.5?App.accentHex:'#FFB74D'});
+    }
+    s.particles=s.particles.filter(par=>{
+      const force=120*p.mass/(par.r*par.r+1);
+      par.vr-=force*dt; par.vt+=0.3*par.vr*dt/par.r; par.r+=par.vr*dt; par.ang+=par.vt/par.r*dt;
+      par.life-=dt*0.18;
+      return par.r>10*p.mass && par.life>0;
+    });
+  },
+  draw(ctx,s,p,{CW,CH}){
+    ctx.fillStyle='#060809'; ctx.fillRect(0,0,CW,CH);
+    for(let i=0;i<100;i++){ ctx.fillStyle=hexA('#fff',0.22); ctx.beginPath(); ctx.arc((i*137)%CW,(i*93)%CH,0.6,0,TAU); ctx.fill(); }
+    const cx=CW/2, cy=CH/2, rs=12*p.mass;
+    const diskGrad=ctx.createRadialGradient(cx,cy,rs,cx,cy,180);
+    diskGrad.addColorStop(0,hexA('#FF6000',0.0)); diskGrad.addColorStop(0.3,hexA('#FF8C00',0.25));
+    diskGrad.addColorStop(0.6,hexA('#FFB74D',0.12)); diskGrad.addColorStop(1,'transparent');
+    ctx.fillStyle=diskGrad; ctx.fillRect(0,0,CW,CH);
+    s.particles.forEach(par=>{
+      const px=cx+Math.cos(par.ang)*par.r, py=cy+Math.sin(par.ang)*par.r*0.32;
+      const temp=clamp(1-par.r/240,0,1);
+      const alpha=par.life*0.9;
+      const R=Math.round(lerp(255,255,temp)), G_=Math.round(lerp(180,100,temp)), B=Math.round(lerp(80,10,temp));
+      ctx.fillStyle=hexA(`#${R.toString(16).padStart(2,'0')}${G_.toString(16).padStart(2,'0')}${B.toString(16).padStart(2,'0')}`,alpha);
+      ctx.beginPath(); ctx.arc(px,py,clamp(2*(1-par.r/240)+1,0.5,4),0,TAU); ctx.fill();
+    });
+    ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(cx,cy,rs,0,TAU); ctx.fill();
+    const glow=ctx.createRadialGradient(cx,cy,rs*0.8,cx,cy,rs*3.5);
+    glow.addColorStop(0,hexA('#FFB74D',0.4)); glow.addColorStop(0.4,hexA('#FF6000',0.15)); glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(cx,cy,rs*3.5,0,TAU); ctx.fill();
+    ctx.strokeStyle='#111'; ctx.lineWidth=rs*2; ctx.beginPath(); ctx.arc(cx,cy,rs*1.4,0,TAU); ctx.stroke();
+    ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(cx,cy,rs,0,TAU); ctx.fill();
+  },
+  readouts(s,p){ return [['جسيمات قرص التراص',s.particles.length],['نصف قطر شفارتزشيلد',fmt(12*p.mass,0)+' وحدة'],['الزمن',fmt(s.t,1)+' ث']]; }
+});
+
+/* ═══════════════════════════════════════════
+   ELECTROMAGNETISM
+   ═══════════════════════════════════════════ */
+
+/* ---------- 14) مجال الشحنات الكهربائية ---------- */
+defineSim({
+  id:'eField', category:'em', title:'مجال الشحنات الكهربائية',
+  tagline:'خطوط المجال وخطوط التساوي الكمون حول شحنات نقطية.',
+  description:'كل شحنة نقطية تخلق مجالًا كهربائيًا يشع منها إن كانت موجبة ويتجه إليها إن كانت سالبة. خطوط المجال تشير إلى اتجاه القوة على شحنة موجبة اختبارية، وخطوط التساوي (الإكيبوتنشيال) عمودية دائمًا على خطوط المجال.',
+  formula:'E = k q / r²    V = k q / r',
+  laws:[
+    '<b>قانون كولوم:</b> القوة بين شحنتين تتناسب مع حاصل ضرب الشحنتين وتتناسب عكسيًا مع مربع المسافة بينهما.',
+    '<b>مبدأ التراكب:</b> المجال في أي نقطة هو المجموع المتجهي لمجالات كل الشحنات منفردةً.',
+  ],
+  hint:'انقر على الشاشة لإضافة شحنة موجبة، وانقر بزر يمين لإضافة سالبة',
+  params:[
+    {key:'showField', label:'خطوط المجال', type:'bool', value:true},
+    {key:'showEquip', label:'خطوط التساوي', type:'bool', value:true},
+  ],
+  init(){
+    return {charges:[
+      {x:0.35,y:0.5,q:1},{x:0.65,y:0.5,q:-1}
+    ]};
+  },
+  onDown(s,p,x,y,{CW,CH},e){ if(e && e.button===2){ s.charges.push({x:x/CW,y:y/CH,q:-1}); } else { s.charges.push({x:x/CW,y:y/CH,q:1}); } if(s.charges.length>8) s.charges.shift(); },
+  step(){},
+  draw(ctx,s,p,{CW,CH}){
+    ctx.fillStyle='#0d1008'; ctx.fillRect(0,0,CW,CH);
+    const k=1, EPS=1e-6;
+    function field(px,py){
+      let Ex=0,Ey=0,V=0;
+      s.charges.forEach(c=>{
+        const dx=px-c.x*CW, dy=py-c.y*CH, r2=dx*dx+dy*dy+EPS, r=Math.sqrt(r2);
+        const f=k*c.q/(r2); Ex+=f*dx/r; Ey+=f*dy/r; V+=k*c.q/r;
+      });
+      return {Ex,Ey,V};
+    }
+    if(p.showEquip){
+      for(let V=-3;V<=3;V+=0.5){
+        ctx.strokeStyle=V===0?hexA('#4FD8E8',0.5):(V>0?hexA('#4FD8E8',0.18):hexA('#FF6FA5',0.18));
+        ctx.lineWidth=V===0?1.6:0.9; ctx.beginPath(); let first=true;
+        for(let ix=0;ix<CW;ix+=3){
+          for(let iy=0;iy<CH;iy+=3){
+            const fv=field(ix,iy); const fv2=field(ix+3,iy); const fv3=field(ix,iy+3);
+            if((fv.V-V)*(fv2.V-V)<0){ ctx.moveTo(ix,iy); ctx.lineTo(ix+3,iy); }
+            if((fv.V-V)*(fv3.V-V)<0){ ctx.moveTo(ix,iy); ctx.lineTo(ix,iy+3); }
+          }
+        }
+        ctx.stroke();
+      }
+    }
+    if(p.showField){
+      for(let ix=22;ix<CW;ix+=44) for(let iy=22;iy<CH;iy+=44){
+        const {Ex,Ey}=field(ix,iy);
+        const mag=vlen(Ex,Ey)||EPS, len=clamp(mag*18,3,22);
+        drawArrow(ctx,ix,iy,ix+Ex/mag*len,iy+Ey/mag*len,hexA(App.accentHex,0.55),1.2);
+      }
+    }
+    s.charges.forEach(c=>{
+      const col=c.q>0?'#FF6060':'#6090FF';
+      glowDot(ctx,c.x*CW,c.y*CH,10,col);
+      ctx.fillStyle='#fff'; ctx.font='bold 13px var(--font-mono)'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(c.q>0?'+':'−',c.x*CW,c.y*CH);
+    });
+  },
+  readouts(s){ return [['عدد الشحنات',s.charges.length],['موجبة',s.charges.filter(c=>c.q>0).length],['سالبة',s.charges.filter(c=>c.q<0).length]]; }
+});
+
+/* ---------- 15) دائرة RLC ---------- */
+defineSim({
+  id:'rlc', category:'em', title:'دائرة RLC والرنين الكهربائي',
+  tagline:'تذبذبات شحن المكثف والتيار في دائرة مقاومة-ملف-مكثف.',
+  description:'في دائرة RLC المتسلسلة يتبادل المكثف والملف الطاقة بينهما مثل زنبرك وكتلة، بينما تستهلك المقاومة الطاقة. عند الرنين (ω=1/√LC) تبلغ سعة التيار ذروتها وتصبح المعاوقة أدنى ما يمكن.',
+  formula:'L q\'\' + R q\' + q/C = Vm sin(ωt)',
+  laws:[
+    '<b>الرنين الكهربائي:</b> يحدث حين يساوي تردد المصدر ω₀=1/√(LC)، ويؤدي إلى أعظم استجابة للتيار.',
+    '<b>المعاوقة:</b> Z = √(R² + (ωL − 1/ωC)²) — أصغرها عند الرنين حين يساوي R فقط.',
+  ],
+  params:[
+    {key:'R', label:'المقاومة R', min:1,max:100,step:1,value:15,unit:' Ω',dec:0},
+    {key:'L', label:'الحث L', min:0.1,max:5,step:0.1,value:1,unit:' H',dec:1},
+    {key:'C', label:'السعة C', min:0.01,max:2,step:0.01,value:0.25,unit:' F',dec:2},
+    {key:'Vm', label:'جهد المصدر Vm', min:1,max:50,step:1,value:20,unit:' V',dec:0},
+    {key:'omega', label:'تردد زاوي ω', min:0.1,max:10,step:0.05,value:2,unit:' rad/s',dec:2},
+  ],
+  init(){ return {q:0,dq:0,t:0,Ihist:[],Qhist:[],Vhist:[]}; },
+  step(s,p,dt){
+    const Vs=p.Vm*Math.sin(p.omega*s.t);
+    const ddq=(Vs-p.R*s.dq-s.q/p.C)/p.L;
+    s.dq+=ddq*dt; s.q+=s.dq*dt; s.t+=dt;
+    s.Ihist.push(s.dq); s.Qhist.push(s.q); s.Vhist.push(Vs);
+    if(s.Ihist.length>350){ s.Ihist.shift(); s.Qhist.shift(); s.Vhist.shift(); }
+  },
+  draw(ctx,s,p,{CW,CH}){
+    grid(ctx,CW,CH,30,'#0e1615');
+    const w0=1/Math.sqrt(p.L*p.C);
+    const Z=Math.sqrt(p.R*p.R+Math.pow(p.omega*p.L-1/(p.omega*p.C),2));
+    const Ipeak=p.Vm/Z;
+    const drawTrace=(hist,color,row,maxV)=>{
+      const H=CH*0.28, top=12+row*(H+8), mid=top+H/2;
+      ctx.strokeStyle='#1e2a1c'; ctx.lineWidth=1; ctx.strokeRect(20,top,CW-40,H);
+      ctx.strokeStyle='#2a3a28'; ctx.setLineDash([3,5]); ctx.beginPath(); ctx.moveTo(20,mid); ctx.lineTo(CW-20,mid); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle=color; ctx.lineWidth=1.6; ctx.beginPath();
+      hist.forEach((v,i)=>{ const px=20+(CW-40)*i/350, py=mid-v/maxV*(H*0.44); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+      ctx.stroke();
+    };
+    const maxI=Math.max(Ipeak*1.2,0.1), maxQ=Math.max(p.Vm*p.C*1.3,0.1), maxV=p.Vm*1.1;
+    drawTrace(s.Ihist,App.accentHex,0,maxI);
+    drawTrace(s.Qhist,'#8C93FF',1,maxQ);
+    drawTrace(s.Vhist,'#4FD8E8',2,maxV);
+    ctx.fillStyle=App.accentHex; ctx.font='10px var(--font-mono)'; ctx.textAlign='start';
+    ctx.fillText('I(t)',26,20); ctx.fillStyle='#8C93FF'; ctx.fillText('Q(t)',26,20+CH*0.28+8); ctx.fillStyle='#4FD8E8'; ctx.fillText('V(t)',26,20+CH*0.56+16);
+  },
+  readouts(s,p){ const w0=1/Math.sqrt(p.L*p.C); const Z=Math.sqrt(p.R*p.R+Math.pow(p.omega*p.L-1/(p.omega*p.C),2)); return [['تردد الرنين ω₀',fmt(w0,2)+' rad/s'],['التردد الحالي ω',fmt(p.omega,2)+' rad/s'],['المعاوقة Z',fmt(Z,1)+' Ω'],['ذروة التيار Ipeak',fmt(p.Vm/Z,2)+' A']]; }
+});
+
+/* ═══════════════════════════════════════════
+   WAVES & LIGHT
+   ═══════════════════════════════════════════ */
+
+/* ---------- 16) تداخل الموجات وتجربة الشقين ---------- */
+defineSim({
+  id:'doubleSlitInterference', category:'waves', title:'تجربة الشقين — تداخل الموجات',
+  tagline:'تجربة يونغ التاريخية: نمط التداخل البنّاء والهدام.',
+  description:'ضوء متماسك يمر عبر شقين متوازيين ينتج نمط تداخل على الشاشة. الموجات المنبعثة من الشقين تتداخل بنائيًا (تعزيز) حين يكون فرق المسار مضاعفًا صحيحًا للطول الموجي، وهداميًا (إطفاء) عند مضاعفات نصف الطول الموجي.',
+  formula:'d sinθ = mλ  (تداخل بناء)   d sinθ = (m+½)λ (هدام)',
+  laws:[
+    '<b>مبدأ هيوجنز:</b> كل نقطة على جبهة موجة مصدر لموجة كروية ثانوية، وهو ما يحدث عبر الشقين.',
+    '<b>الترابط الطوري:</b> التداخل البنّاء يحدث حين تتفق الطورين، والهدام حين تتعاكسان.',
+  ],
+  params:[
+    {key:'lambda', label:'الطول الموجي λ', min:380,max:700,step:5,value:540,unit:' نانو',dec:0},
+    {key:'slit_d', label:'المسافة بين الشقين d', min:0.5,max:4,step:0.1,value:1.5,unit:' وحدة',dec:1},
+    {key:'slit_w', label:'عرض الشق', min:0.1,max:1,step:0.05,value:0.3,unit:' وحدة',dec:2},
+  ],
+  init(){ return {t:0}; },
+  step(s,p,dt){ s.t+=dt; },
+  draw(ctx,s,p,{CW,CH}){
+    ctx.fillStyle='#06060e'; ctx.fillRect(0,0,CW,CH);
+    const slitX=CW*0.38, screenX=CW*0.86;
+    const cy=CH/2, d=p.slit_d*40, w=p.slit_w*15;
+    const lam=p.lambda, hue=Math.round((700-lam)/(700-380)*260);
+    const lightCol=`hsl(${hue},100%,55%)`;
+    ctx.fillStyle='#1a1a2e'; ctx.fillRect(slitX-4,0,8,cy-d/2-w); ctx.fillRect(slitX-4,cy-d/2+w,8,d-2*w); ctx.fillRect(slitX-4,cy+d/2+w,8,CH);
+    const k=TAU/(lam/80), t=s.t*2;
+    for(let ix=slitX+6;ix<screenX;ix+=4){
+      for(let iy=4;iy<CH;iy+=3){
+        const dx=ix-slitX, dy1=iy-(cy-d/2), dy2=iy-(cy+d/2);
+        const r1=Math.hypot(dx,dy1), r2=Math.hypot(dx,dy2);
+        const amp=0.5*(Math.sin(k*r1-t)/Math.max(1,Math.sqrt(r1)*0.25)+Math.sin(k*r2-t)/Math.max(1,Math.sqrt(r2)*0.25));
+        const intensity=clamp(amp*amp*0.65,0,1);
+        ctx.fillStyle=`hsla(${hue},100%,60%,${intensity*0.55})`;
+        ctx.fillRect(ix,iy,4,3);
+      }
+    }
+    ctx.fillStyle='#1a2020'; ctx.fillRect(screenX,0,CW-screenX,CH);
+    for(let iy=0;iy<CH;iy++){
+      const dy1=iy-(cy-d/2), dy2=iy-(cy+d/2);
+      const path_diff=(Math.hypot(screenX-slitX,dy1)-Math.hypot(screenX-slitX,dy2));
+      const phase=TAU*path_diff/(lam/80);
+      const I=clamp(Math.cos(phase/2)*Math.cos(phase/2),0,1);
+      ctx.fillStyle=`hsla(${hue},100%,60%,${I*0.9})`;
+      ctx.fillRect(screenX+1,iy,CW-screenX-2,1);
+    }
+    ctx.fillStyle='#1e2820'; ctx.fillRect(0,0,slitX-4,CH);
+    const gSrc=ctx.createRadialGradient(20,cy,0,20,cy,50);
+    gSrc.addColorStop(0,hexA(lightCol,0.8)); gSrc.addColorStop(1,'transparent');
+    ctx.fillStyle=gSrc; ctx.beginPath(); ctx.arc(20,cy,50,0,TAU); ctx.fill();
+    ctx.fillStyle='#5e6b5c'; ctx.font='10px var(--font-ar)'; ctx.textAlign='center';
+    ctx.fillText('مصدر ضوء متماسك',20,cy+38); ctx.fillText('شاشة الرصد',screenX+(CW-screenX)/2,14);
+  },
+  readouts(s,p){
+    const y1=TAU*p.lambda/(p.slit_d*80);
+    return [['الطول الموجي λ',p.lambda+' nm'],['فرق طور هدام',fmt(p.slit_d*40/p.lambda*80,2)+' λ'],['موضع الفرقة الأولى',fmt(Math.asin(p.lambda/(80*p.slit_d))*180/Math.PI,1)+'°']];
+  }
+});
+
+/* ---------- 17) الموجات الصوتية والتشابك ---------- */
+defineSim({
+  id:'sound', category:'waves', title:'الموجات الصوتية والتضارب',
+  tagline:'موجتان صوتيتان بترددين متقاربين تنتجان نبضات تضارب.',
+  description:'حين تجتمع موجتان بترددين متقاربين f₁ و f₂ تنشأ موجة محصلة تتغير سعتها بتردد يساوي |f₁−f₂|. هذه الظاهرة تُسمى التضارب وتُستخدم في ضبط الآلات الموسيقية: أذناك يمكنها سماع النبضة حين يكون الفرق أقل من 20 هرتز.',
+  formula:'y = A[sin(2πf₁t) + sin(2πf₂t)] = 2A cos(π|f₁-f₂|t) sin(2π·f̄·t)',
+  laws:[
+    '<b>التضارب:</b> تردد النبضات = |f₁ − f₂| — يُسمع كتذبذب في الشدة.',
+    '<b>مبدأ التراكب:</b> الإزاحة الكلية عند أي نقطة = مجموع إزاحات الموجات المنفردة.',
+  ],
+  params:[
+    {key:'f1', label:'التردد الأول f₁', min:20,max:500,step:1,value:220,unit:' Hz',dec:0},
+    {key:'f2', label:'التردد الثاني f₂', min:20,max:500,step:1,value:224,unit:' Hz',dec:0},
+    {key:'A', label:'السعة', min:0.1,max:1,step:0.02,value:0.7,dec:2},
+  ],
+  init(){ return {t:0}; },
+  step(s,p,dt){ s.t+=dt; },
+  draw(ctx,s,p,{CW,CH}){
+    grid(ctx,CW,CH,32,'#0d110f');
+    const rows=[
+      {f:p.f1,col:'#4FD8E8',label:'f₁',yBase:CH*0.22},
+      {f:p.f2,col:App.accentHex,label:'f₂',yBase:CH*0.5},
+      {f:null,col:'#8CFF8A',label:'محصلة',yBase:CH*0.78},
+    ];
+    const scale=60, tWindow=Math.max(0.06,3/Math.abs(p.f1-p.f2||1));
+    rows.forEach(row=>{
+      ctx.strokeStyle=row.col; ctx.lineWidth=row.f===null?2:1.3; ctx.beginPath();
+      for(let i=0;i<=CW-40;i++){
+        const tSample=s.t-tWindow*(1-i/(CW-40));
+        let y;
+        if(row.f===null) y=p.A*(Math.sin(TAU*p.f1*tSample)+Math.sin(TAU*p.f2*tSample));
+        else y=p.A*Math.sin(TAU*row.f*tSample);
+        const py=row.yBase-y*scale;
+        i===0?ctx.moveTo(20+i,py):ctx.lineTo(20+i,py);
+      }
+      ctx.stroke();
+      ctx.strokeStyle=hexA(row.col,0.2); ctx.setLineDash([3,6]); ctx.beginPath(); ctx.moveTo(20,row.yBase); ctx.lineTo(CW-20,row.yBase); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle=hexA(row.col,0.8); ctx.font='10px var(--font-mono)'; ctx.textAlign='start'; ctx.fillText(row.label,22,row.yBase-scale*p.A-5);
+    });
+  },
+  readouts(s,p){ const beat=Math.abs(p.f1-p.f2); return [['تردد التضارب',beat+' Hz'],['الفترة بين النبضات',beat?fmt(1/beat,3)+'ث':'∞'],['f̄ (متوسط)',fmt((p.f1+p.f2)/2,0)+' Hz']]; }
+});
+
+/* ═══════════════════════════════════════════
+   FLUIDS & THERMODYNAMICS
+   ═══════════════════════════════════════════ */
+
+/* ---------- 18) محاكاة ديناميكا الموائع (لاتس بولتزمان مبسط) ---------- */
+defineSim({
+  id:'fluidFlow', category:'fluids', title:'ديناميكا الموائع حول عائق',
+  tagline:'تدفق مائع حول جسم دائري مع تكوّن دوامات الكارمان.',
+  description:'تدفق مائع لزج حول عائق أسطواني. عند أعداد رينولدز منخفضة يكون التدفق منتظمًا لاصقًا بالجسم. عند ارتفاع الرينولدز تبدأ دوامات تتكوّن وتنفصل بالتناوب من كلا الجانبين في نمط منتظم يُعرف بشارع الكارمان الدوامي.',
+  formula:'Re = ρvL/μ   (عدد رينولدز)',
+  laws:[
+    '<b>عدد رينولدز:</b> يصف نسبة القوى القصورية للقوى اللزجة — منخفض=لامي، مرتفع=مضطرب.',
+    '<b>شارع الكارمان:</b> عند Re~40→200 تتكوّن دوامات ناعمة دورية خلف العائق.',
+    '<b>مبدأ الاستمرارية:</b> تسارع المائع عند الضيق حفاظًا على معدل التدفق الحجمي.',
+  ],
+  params:[
+    {key:'Re', label:'عدد رينولدز Re', min:10,max:200,step:2,value:80,dec:0},
+    {key:'colorMode', label:'طريقة التلوين', type:'choice', value:'velocity',
+     choices:[{value:'velocity',label:'السرعة'},{value:'vorticity',label:'الدوران'},{value:'pressure',label:'الضغط'}]},
+  ],
+  init(p,{CW,CH}){
+    const NX=Math.min(100,Math.floor(CW/6)), NY=Math.min(60,Math.floor(CH/6));
+    const tau=0.8; const u0=0.08;
+    const f=new Float32Array(NX*NY*9).fill(0);
+    const w=[4/9,1/9,1/9,1/9,1/9,1/36,1/36,1/36,1/36];
+    for(let i=0;i<NX;i++) for(let j=0;j<NY;j++){
+      const idx=(j*NX+i)*9;
+      for(let q=0;q<9;q++) f[idx+q]=w[q]*(1+3*u0*(q===1?1:q===3?-1:0));
+    }
+    const obs=new Uint8Array(NX*NY);
+    const cx=Math.floor(NX*0.35), cy=Math.floor(NY*0.5), radius=Math.floor(Math.min(NX,NY)*0.12);
+    for(let i=0;i<NX;i++) for(let j=0;j<NY;j++) if((i-cx)**2+(j-cy)**2<=radius*radius) obs[j*NX+i]=1;
+    return {f,obs,NX,NY,tau,u0,step:0};
+  },
+  step(s,p,dt){
+    const {f,obs,NX,NY,tau,u0}=s;
+    const ex=[0,1,0,-1,0,1,-1,-1,1], ey=[0,0,1,0,-1,1,1,-1,-1];
+    const w=[4/9,1/9,1/9,1/9,1/9,1/36,1/36,1/36,1/36];
+    const omega=1/tau;
+    const fTmp=new Float32Array(f.length);
+    for(let i=0;i<NX;i++) for(let j=0;j<NY;j++){
+      const idx=(j*NX+i)*9;
+      if(obs[j*NX+i]){ for(let q=0;q<9;q++) fTmp[idx+q]=0; continue; }
+      let rho=0,ux=0,uy=0;
+      for(let q=0;q<9;q++){ rho+=f[idx+q]; ux+=ex[q]*f[idx+q]; uy+=ey[q]*f[idx+q]; }
+      if(rho<1e-6) rho=1;
+      ux/=rho; uy/=rho;
+      for(let q=0;q<9;q++){
+        const eu=ex[q]*ux+ey[q]*uy;
+        const feq=rho*w[q]*(1+3*eu+4.5*eu*eu-1.5*(ux*ux+uy*uy));
+        fTmp[idx+q]=f[idx+q]-omega*(f[idx+q]-feq);
+      }
+    }
+    for(let i=0;i<NX;i++) for(let j=0;j<NY;j++){
+      const idx=(j*NX+i)*9;
+      for(let q=0;q<9;q++){
+        const ni=((i+ex[q])%NX+NX)%NX, nj=((j+ey[q])%NY+NY)%NY;
+        const nidx=(nj*NX+ni)*9;
+        if(obs[nj*NX+ni]){ f[nidx+(8-q)]=fTmp[idx+q]; }
+        else { f[nidx+q]=fTmp[idx+q]; }
+      }
+    }
+    for(let j=0;j<NY;j++){
+      const idx=(j*NX+0)*9;
+      for(let q=0;q<9;q++) f[idx+q]=w[q]*(1+3*u0*(ex[q]===1?1:0));
+    }
+    s.step++;
+  },
+  draw(ctx,s,p,{CW,CH}){
+    const {f,obs,NX,NY}=s;
+    const ex=[0,1,0,-1,0,1,-1,-1,1], ey=[0,0,1,0,-1,1,1,-1,-1];
+    const cw=CW/NX, ch=CH/NY;
+    const imgData=ctx.createImageData(CW,CH);
+    const buf=imgData.data;
+    for(let i=0;i<NX;i++) for(let j=0;j<NY;j++){
+      const idx=(j*NX+i)*9;
+      let rho=0,ux=0,uy=0;
+      for(let q=0;q<9;q++){ rho+=f[idx+q]; ux+=ex[q]*f[idx+q]; uy+=ey[q]*f[idx+q]; }
+      if(rho>0){ ux/=rho; uy/=rho; }
+      const spd=vlen(ux,uy)/0.16;
+      const isObs=obs[j*NX+i];
+      for(let di=0;di<Math.ceil(cw);di++) for(let dj=0;dj<Math.ceil(ch);dj++){
+        const px=Math.floor(i*cw)+di, py=Math.floor(j*ch)+dj;
+        if(px>=CW||py>=CH) continue;
+        const pidx=(py*CW+px)*4;
+        if(isObs){ buf[pidx]=60; buf[pidx+1]=70; buf[pidx+2]=58; buf[pidx+3]=255; continue; }
+        let r,g,b;
+        if(p.colorMode==='velocity'){
+          const t=clamp(spd,0,1); r=Math.round(lerp(0,242,t)); g=Math.round(lerp(100,119,t)); b=Math.round(lerp(255,74,t));
+        } else if(p.colorMode==='vorticity'){
+          const du_dy=(uy-0)/(0.1); const t=clamp((ux*10+1)/2,0,1); r=Math.round(lerp(50,242,t)); g=Math.round(lerp(80,119,t)); b=Math.round(lerp(200,74,t));
+        } else {
+          const pV=clamp(rho-0.98,0,0.04)/0.04; r=Math.round(lerp(0,255,pV)); g=Math.round(lerp(50,100,pV)); b=Math.round(lerp(200,0,pV));
+        }
+        buf[pidx]=r; buf[pidx+1]=g; buf[pidx+2]=b; buf[pidx+3]=255;
+      }
+    }
+    ctx.putImageData(imgData,0,0);
+  },
+  readouts(s,p){ return [['خطوات المحاكاة',s.step],['Re',p.Re],['حجم الشبكة',s.NX+'×'+s.NY]]; }
+});
+
+/* ---------- 19) قانون الغازات المثالية والتوزيع ---------- */
+defineSim({
+  id:'idealGas', category:'fluids', title:'الغاز المثالي وتوزيع ماكسويل',
+  tagline:'جزيئات غاز تتصادم بشكل مرن وتُظهر توزيع ماكسويل-بولتزمان للسرعات.',
+  description:'الغاز المثالي يتكوّن من جزيئات نقطية تتصادم بشكل مرن ولا تتفاعل إلا أثناء التصادم. درجة الحرارة تقيس متوسط الطاقة الحركية. الرسم البياني يُظهر توزيع السرعات الفعلي الذي يتقارب مع توزيع ماكسويل-بولتزمان النظري.',
+  formula:'PV = nRT    ½mv² = 3/2 kT',
+  laws:[
+    '<b>قانون بويل:</b> عند ثبات الحرارة: P∝1/V — ضغط الغاز يتناسب عكسيًا مع حجمه.',
+    '<b>تجهيز الطاقة المتساوي:</b> كل درجة حرية تأخذ ½kT من متوسط الطاقة الحركية.',
+  ],
+  params:[
+    {key:'N', label:'عدد الجزيئات', min:20,max:200,step:5,value:80,dec:0},
+    {key:'T', label:'درجة الحرارة (نسبية)', min:0.3,max:3,step:0.05,value:1,dec:2},
+    {key:'gravity', label:'جاذبية خفيفة', type:'bool', value:false},
+  ],
+  init(p,{CW,CH}){
+    const mols=[];
+    for(let i=0;i<p.N;i++){
+      const spd=1+Math.sqrt(-2*Math.log(Math.random()))*Math.sqrt(p.T)*120;
+      const ang=rand(0,TAU);
+      mols.push({x:rand(8,CW-8),y:rand(8,CH*0.62-8),vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,r:4});
+    }
+    return {mols};
+  },
+  step(s,p,dt,{CW,CH}){
+    const boxH=CH*0.62;
+    const g=p.gravity?80:0;
+    s.mols.forEach(m=>{ m.vy+=g*dt; m.x+=m.vx*dt; m.y+=m.vy*dt;
+      if(m.x<m.r){ m.x=m.r; m.vx=Math.abs(m.vx); }
+      if(m.x>CW-m.r){ m.x=CW-m.r; m.vx=-Math.abs(m.vx); }
+      if(m.y<m.r){ m.y=m.r; m.vy=Math.abs(m.vy); }
+      if(m.y>boxH-m.r){ m.y=boxH-m.r; m.vy=-Math.abs(m.vy); }
+    });
+    for(let i=0;i<s.mols.length;i++) for(let j=i+1;j<s.mols.length;j++){
+      const a=s.mols[i], b=s.mols[j];
+      const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy), min=a.r+b.r;
+      if(d>0&&d<min){ const nx=dx/d, ny=dy/d, rel=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny; if(rel<0){ const j2=-rel; a.vx-=j2*nx; a.vy-=j2*ny; b.vx+=j2*nx; b.vy+=j2*ny; } const ov=(min-d)/2; a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov; }
+    }
+    const tgt=p.T*120;
+    s.mols.forEach(m=>{ const sp=vlen(m.vx,m.vy)||1; const nsp=sp+(tgt-sp)*0.002; m.vx*=nsp/sp; m.vy*=nsp/sp; });
+  },
+  draw(ctx,s,p,{CW,CH}){
+    const boxH=CH*0.62;
+    grid(ctx,CW,boxH,30,'#180f0a');
+    ctx.strokeStyle='#4a2e18'; ctx.lineWidth=2; ctx.strokeRect(1,1,CW-2,boxH-1);
+    s.mols.forEach(m=>{ const spd=vlen(m.vx,m.vy); const t=clamp(spd/240,0,1); const col=`hsl(${lerp(200,0,t)},80%,55%)`; glowDot(ctx,m.x,m.y,m.r,col); });
+    const gY=boxH+6, gH=CH-boxH-12;
+    ctx.fillStyle='#0e0a06'; ctx.fillRect(0,gY,CW,gH);
+    const bins=30, binW=(CW-40)/bins, speeds=s.mols.map(m=>vlen(m.vx,m.vy));
+    const maxSpd=300; const counts=new Array(bins).fill(0);
+    speeds.forEach(sp=>{ const b=Math.floor(sp/maxSpd*bins); if(b>=0&&b<bins) counts[b]++; });
+    const maxCount=Math.max(...counts,1);
+    ctx.strokeStyle=hexA(App.accentHex,0.3); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(20,gY); ctx.lineTo(20,gY+gH); ctx.lineTo(CW-20,gY+gH); ctx.stroke();
+    counts.forEach((c,i)=>{ const x=20+i*binW, barH=c/maxCount*gH*0.85; ctx.fillStyle=hexA(App.accentHex,0.7); ctx.fillRect(x,gY+gH-barH,binW-1,barH); });
+    ctx.strokeStyle='#FFB74D'; ctx.lineWidth=1.5; ctx.beginPath();
+    const vp=p.T*120; const A=gH*0.85/maxCount*s.mols.length/bins*maxSpd*0.032;
+    for(let i=0;i<=bins;i++){ const v=(i+0.5)*maxSpd/bins; const f=A*(4/Math.sqrt(Math.PI))*(Math.pow(v/vp,2))*Math.exp(-(v/vp)*(v/vp))*(1/vp); const x=20+i*binW, y=gY+gH-f; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+    ctx.stroke();
+  },
+  readouts(s){ const speeds=s.mols.map(m=>vlen(m.vx,m.vy)); const avg=speeds.reduce((a,b)=>a+b,0)/speeds.length; return [['عدد الجزيئات',s.mols.length],['متوسط السرعة',fmt(avg,0)+' و/ث'],['الطاقة الحركية',fmt(s.mols.reduce((a,m)=>a+0.5*(m.vx**2+m.vy**2),0)/s.mols.length,0)]]; }
+});
+
+/* ═══════════════════════════════════════════
+   MODERN PHYSICS
+   ═══════════════════════════════════════════ */
+
+/* ---------- 20) التحلل المشع ---------- */
+defineSim({
+  id:'radioactivity', category:'modern', title:'التحلل المشع وقانون الاضمحلال',
+  tagline:'تحلل مجموعة من النوى المشعة وفق القانون الأسي — دور العشوائية في الكم.',
+  description:'في كل وحدة زمنية، كل نواة لها احتمال ثابت للتحلل بشكل مستقل عن عمرها. ينتج عن ذلك اضمحلال أسي في العدد الكلي، لكن وقت تحلل أي نواة بعينها غير قابل للتنبؤ — مثال حي على العشوائية الجوهرية في ميكانيكا الكم.',
+  formula:'N(t) = N₀ e^(−λt)    T½ = ln2/λ',
+  laws:[
+    '<b>العمر النصفي T½:</b> المدة اللازمة لتحلل نصف ذرات العينة، وهو خاصية ثابتة لكل نظير مشع.',
+    '<b>العشوائية الجوهرية:</b> وقت تحلل أي ذرة بعينها لا يمكن التنبؤ به نظريًا — ليست فجوة علمية بل حقيقة كمية.',
+  ],
+  hint:'لاحظ التذبذبات العشوائية حول المنحنى النظري الأسي',
+  params:[
+    {key:'lambda', label:'ثابت الاضمحلال λ', min:0.05,max:2,step:0.05,value:0.4,unit:' /ث',dec:2},
+    {key:'N0', label:'عدد النوى الابتدائي', min:50,max:1000,step:50,value:400,dec:0},
+    {key:'showTheory', label:'المنحنى النظري', type:'bool', value:true},
+  ],
+  init(p){ return {nuclei:Array.from({length:p.N0},()=>({alive:true,x:0,y:0,age:0})), t:0, hist:[], N0:p.N0}; },
+  step(s,p,dt,{CW,CH}){
+    if(!s.placed){ s.nuclei.forEach(n=>{ n.x=rand(30,CW*0.55-10); n.y=rand(8,CH*0.56-8); }); s.placed=true; }
+    s.t+=dt;
+    s.nuclei.forEach(n=>{ if(n.alive && Math.random()<p.lambda*dt){ n.alive=false; n.decayT=s.t; } });
+    s.hist.push({t:s.t,N:s.nuclei.filter(n=>n.alive).length});
+    if(s.hist.length>300) s.hist.shift();
+    if(s.nuclei.every(n=>!n.alive) && s.t>0.5){ Object.assign(s,this.init(p,{CW,CH})); }
+  },
+  draw(ctx,s,p,{CW,CH}){
+    grid(ctx,CW,CH*0.58,26,'#111020');
+    ctx.strokeStyle='#2a2040'; ctx.strokeRect(0,0,CW*0.56,CH*0.58);
+    s.nuclei.forEach(n=>{
+      if(n.alive) glowDot(ctx,n.x,n.y,4,'#FF6FA5');
+      else { const age=s.t-(n.decayT||0); if(age<1.2){ ctx.globalAlpha=1-age/1.2; glowDot(ctx,n.x,n.y,8,'#4FD8E8'); ctx.globalAlpha=1; } }
+    });
+    const gX=CW*0.58, gW=CW-gX-10, gY=10, gH=CH-20;
+    ctx.strokeStyle='#2a2040'; ctx.strokeRect(gX,gY,gW,gH);
+    const tMax=Math.max(s.hist[s.hist.length-1]?.t||1,4);
+    if(p.showTheory){
+      ctx.strokeStyle=hexA('#FFB74D',0.5); ctx.lineWidth=1.4; ctx.setLineDash([3,4]); ctx.beginPath();
+      for(let i=0;i<=60;i++){ const tt=tMax*i/60; const Nth=s.N0*Math.exp(-p.lambda*tt); const px=gX+gW*i/60, py=gY+gH*(1-Nth/s.N0); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    if(s.hist.length>1){
+      ctx.strokeStyle=App.accentHex; ctx.lineWidth=1.8; ctx.beginPath();
+      s.hist.forEach((pt,i)=>{ const px=gX+gW*pt.t/tMax, py=gY+gH*(1-pt.N/s.N0); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+      ctx.stroke();
+    }
+    ctx.fillStyle='#5e6b5c'; ctx.font='9.5px var(--font-mono)'; ctx.textAlign='center'; ctx.fillText('T½≈'+fmt(Math.LN2/p.lambda,2)+'ث',gX+gW/2,gY+gH-4);
+  },
+  readouts(s,p){ const N=s.nuclei.filter(n=>n.alive).length; const T2=Math.LN2/p.lambda; return [['نوى باقية',N],['انتصاف العمر T½',fmt(T2,2)+' ث'],['انتصافات مرّت',fmt(s.t/T2,1)],['% المتبقي',fmt(100*N/s.N0,0)+'%']]; }
+});
+
+/* ---------- 21) نموذج الذرة الهيدروجينية ---------- */
+defineSim({
+  id:'hydrogen', category:'modern', title:'مستويات الطاقة في الهيدروجين',
+  tagline:'الانتقالات الكمية وإطلاق الفوتونات في نموذج بور.',
+  description:'في نموذج بور (والميكانيكا الكمية الكاملة) لا تأخذ الطاقة أي قيمة مستمرة بل قيمًا منفصلة محددة. عند انتقال الإلكترون من مستوى أعلى لأدنى يُطلق فوتونًا طاقته بالضبط فرق الطاقتين. يُظهر المحاكي الطيف المرئي لسلسلة بالمر وطيف الليمان في الأشعة فوق البنفسجية.',
+  formula:'Eₙ = −13.6 eV / n²    λ = 91.2nm/(1/n₁² - 1/n₂²)',
+  laws:[
+    '<b>الكمية (التكميم):</b> الإلكترون لا يُطلق إشعاعًا في مداره، بل يُصدر فوتونًا لحظة الانتقال فقط.',
+    '<b>طيف خطي:</b> الطيف المنبعث يتكوّن من خطوط ذات أطوال موجية محددة تمامًا لأن مستويات الطاقة منفصلة.',
+  ],
+  params:[
+    {key:'nFrom', label:'المستوى الابتدائي n', min:2,max:8,step:1,value:5,dec:0},
+    {key:'nTo', label:'المستوى النهائي n', min:1,max:7,step:1,value:2,dec:0},
+  ],
+  init(){ return {photons:[], t:0, lastEmit:0}; },
+  step(s,p,dt){
+    s.t+=dt;
+    const n1=Math.min(p.nFrom,p.nTo+1), n2=p.nTo;
+    if(s.t-s.lastEmit>0.4){
+      const E1=-13.6/(n1*n1), E2=-13.6/(n2*n2);
+      const dE=E2-E1; const lambda=1240/Math.abs(dE);
+      const hue=lambda<380?270:lambda>700?0:Math.round((700-lambda)/(700-380)*270);
+      s.photons.push({x:0.3,y:0.5,vx:rand(0.4,0.7),vy:rand(-0.2,0.2),lambda,hue,alpha:1});
+      s.lastEmit=s.t;
+    }
+    s.photons=s.photons.filter(ph=>{ ph.x+=ph.vx*dt; ph.y+=ph.vy*dt; ph.alpha-=dt*0.5; return ph.alpha>0&&ph.x<1.2; });
+  },
+  draw(ctx,s,p,{CW,CH}){
+    ctx.fillStyle='#05050f'; ctx.fillRect(0,0,CW,CH);
+    const cx=CW*0.32, cy=CH*0.5;
+    const n1=Math.min(p.nFrom,p.nTo+1||2), n2=p.nTo||1;
+    glowDot(ctx,cx,cy,5,'#8C93FF');
+    for(let n=1;n<=6;n++){
+      const r=22+n*26;
+      ctx.strokeStyle=hexA('#8C93FF',n===n1||n===n2?0.6:0.2); ctx.lineWidth=n===n1||n===n2?1.5:0.8;
+      ctx.setLineDash(n===n1||n===n2?[]:[3,5]); ctx.beginPath(); ctx.arc(cx,cy,r,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle=hexA('#8C93FF',0.6); ctx.font='10px var(--font-mono)'; ctx.textAlign='left'; ctx.fillText('n='+n,cx+r+3,cy+3);
+    }
+    const rFrom=22+n1*26, rTo=22+n2*26;
+    const ang=-Math.PI*0.28;
+    ctx.strokeStyle=App.accentHex; ctx.lineWidth=2;
+    drawArrow(ctx,cx+Math.cos(ang)*rFrom,cy+Math.sin(ang)*rFrom,cx+Math.cos(ang)*rTo,cy+Math.sin(ang)*rTo,App.accentHex,2);
+    glowDot(ctx,cx+Math.cos(s.t*2.4)*rFrom,cy+Math.sin(s.t*2.4)*rFrom,5,App.accentHex);
+    s.photons.forEach(ph=>{ const px=cx+(ph.x-0.3)*CW*0.65, py=cy+(ph.y-0.5)*CH; ctx.globalAlpha=ph.alpha; glowDot(ctx,px,py,4,`hsl(${ph.hue},100%,60%)`); ctx.globalAlpha=1; });
+    const specX=CW*0.58, specY=CH*0.78, specW=CW*0.38, specH=26;
+    const sg=ctx.createLinearGradient(specX,0,specX+specW,0);
+    sg.addColorStop(0,'#4400ff'); sg.addColorStop(0.25,'#00aaff'); sg.addColorStop(0.5,'#00ff88'); sg.addColorStop(0.75,'#ffff00'); sg.addColorStop(1,'#ff0000');
+    ctx.fillStyle=sg; ctx.fillRect(specX,specY,specW,specH);
+    const E1=-13.6/(n1*n1), E2=-13.6/(n2*n2), dE=Math.abs(E2-E1), lam=1240/dE;
+    const relPos=clamp((lam-380)/(700-380),0,1);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(specX+relPos*specW,specY-4); ctx.lineTo(specX+relPos*specW,specY+specH+4); ctx.stroke();
+    ctx.fillStyle='#ccc'; ctx.font='10px var(--font-mono)'; ctx.textAlign='center'; ctx.fillText(fmt(lam,0)+' nm',specX+relPos*specW,specY+specH+16);
+  },
+  readouts(s,p){ const n1=Math.min(p.nFrom,p.nTo+1), n2=p.nTo||1; const E1=-13.6/(n1*n1),E2=-13.6/(n2*n2),dE=Math.abs(E2-E1); const lam=1240/dE; const ser=n2===1?'ليمان':n2===2?'بالمر':n2===3?'باشن':'أخرى'; return [['السلسلة',ser],['الطول الموجي',fmt(lam,0)+' nm'],['طاقة الفوتون',fmt(dE,2)+' eV'],['نطاق الطيف',lam<380?'فوق بنفسجي':lam<=700?'مرئي':'تحت الحمراء']]; }
+});
+
+/* ═══════════════════════════════════════════
+   CHAOS & COMPLEX SYSTEMS
+   ═══════════════════════════════════════════ */
+
+/* ---------- 22) جاذب لورنز ---------- */
+defineSim({
+  id:'lorenz', category:'chaos', title:'جاذب لورنز',
+  tagline:'معادلات بسيطة تولّد سلوكًا فوضويًا ذا بنية هندسية بديعة.',
+  description:'اشتق إدوارد لورنز هذه المعادلات الثلاث عام 1963 من نموذج مبسط لتيارات حرارية في الجو. رغم بساطتها تُنتج نظامًا فوضويًا حساسًا للشروط الابتدائية، ومع ذلك تبقى المسارات محبوسة في بنية هندسية بديعة تُسمى الجاذب الغريب.',
+  formula:'dx/dt=σ(y−x)   dy/dt=x(ρ−z)−y   dz/dt=xy−βz',
+  laws:[
+    '<b>الجاذب الغريب:</b> النظام لا يتقارب ولا يتباعد بل يدور في بنية بعدية جزئية غير صحيحة.',
+    '<b>نطاق لياپونوف:</b> مقياس رياضي لمعدل تضخيم الأخطاء — موجب في أنظمة لورنز.',
+    '<b>الأبعاد الجزئية (فراكتال):</b> بُعد جاذب لورنز ≈ 2.05 ليس عددًا صحيحًا.',
+  ],
+  substeps:8,
+  params:[
+    {key:'sigma', label:'σ (برانتل)', min:1,max:20,step:0.2,value:10,dec:1},
+    {key:'rho', label:'ρ (رايلي)', min:1,max:50,step:0.5,value:28,dec:1},
+    {key:'beta', label:'β (هندسة)', min:0.1,max:5,step:0.05,value:2.67,dec:2},
+    {key:'speed', label:'سرعة المحاكاة', min:0.5,max:4,step:0.1,value:1.5,unit:'×',dec:1},
+    {key:'colorByZ', label:'تلوين بمحور Z', type:'bool', value:true},
+  ],
+  init(){ return {y:[1,1,1.01], trail:[], t:0, maxZ:50, minZ:0}; },
+  step(s,p,dt){
+    const [x,y,z]=s.y;
+    s.y=rk4Step(s.y,dt*p.speed*0.012,([x,y,z])=>[
+      p.sigma*(y-x), x*(p.rho-z)-y, x*y-p.beta*z
+    ]);
+    s.trail.push([...s.y]); if(s.trail.length>2400) s.trail.shift();
+    s.maxZ=Math.max(s.maxZ,s.y[2]); s.minZ=Math.min(s.minZ,s.y[2]);
+    s.t+=dt;
+  },
+  draw(ctx,s,p,{CW,CH}){
+    ctx.fillStyle='#060a06'; ctx.fillRect(0,0,CW,CH);
+    const cx=CW/2, cy=CH/2+20;
+    const scale=Math.min(CW,CH)*0.35/40;
+    if(s.trail.length<2) return;
+    for(let i=1;i<s.trail.length;i++){
+      const [x1,y1,z1]=s.trail[i-1], [x2,y2,z2]=s.trail[i];
+      const px1=cx+x1*scale-z1*scale*0.35, py1=cy-y1*scale+z1*scale*0.2;
+      const px2=cx+x2*scale-z2*scale*0.35, py2=cy-y2*scale+z2*scale*0.2;
+      const alpha=clamp(i/s.trail.length*0.85,0.02,0.85);
+      if(p.colorByZ){ const t=clamp((z2-s.minZ)/(s.maxZ-s.minZ||1),0,1); ctx.strokeStyle=`hsla(${lerp(200,0,t)},80%,60%,${alpha})`; }
+      else { ctx.strokeStyle=hexA(App.accentHex,alpha); }
+      ctx.lineWidth=0.9; ctx.beginPath(); ctx.moveTo(px1,py1); ctx.lineTo(px2,py2); ctx.stroke();
+    }
+    const [cx_,cy_,cz]=s.y; const bx=cx+cx_*scale-cz*scale*0.35, by=cy-cy_*scale+cz*scale*0.2;
+    glowDot(ctx,bx,by,5,'#fff');
+  },
+  readouts(s){ return [['x',fmt(s.y[0],2)],['y',fmt(s.y[1],2)],['z',fmt(s.y[2],2)],['نقاط المسار',s.trail.length]]; }
+});
+
+/* ---------- 23) مجموعة ماندلبروت ---------- */
+defineSim({
+  id:'mandelbrot', category:'chaos', title:'مجموعة ماندلبروت',
+  tagline:'حد بين النظام والفوضى — بنية فراكتالية لا نهاية لتفاصيلها.',
+  description:'مجموعة ماندلبروت هي مجموعة الأعداد المركبة c التي لا تتشعب إلى ما لا نهاية عند تكرار z↦z²+c. حدها يُظهر تعقيدًا لا نهائيًا — مهما كبّرت دائمًا وجدت بنية جديدة. الألوان خارج المجموعة ترمز لسرعة التشعب.',
+  formula:'z_{n+1} = z_n² + c    (c∈M إذا |z_n|≤2 دائمًا)',
+  laws:[
+    '<b>الفراكتال والبعد الجزئي:</b> حد المجموعة بُعده الهاوسدورف ≈ 2 (ليس 1 كالمنحنيات الاعتيادية).',
+    '<b>اللانهاية الهندسية:</b> التكبير اللانهائي يكشف دائمًا عن بنى جديدة ومتشابهة ذاتيًا جزئيًا.',
+  ],
+  hint:'انقر على أي نقطة للتكبير إليها',
+  params:[
+    {key:'maxIter', label:'أقصى تكرار', min:20,max:256,step:8,value:80,dec:0},
+    {key:'colorScheme', label:'نظام الألوان', type:'choice', value:'fire',
+     choices:[{value:'fire',label:'نار'},{value:'ocean',label:'محيط'},{value:'plasma',label:'بلازما'}]},
+  ],
+  init(){ return {cx:-0.5,cy:0,zoom:0.003,renderNeeded:true,imgCache:null,dragging:false}; },
+  step(s,p){ s.renderNeeded=true; },
+  onDown(s,p,x,y,{CW,CH}){
+    const re=s.cx+(x-CW/2)*s.zoom, im=s.cy+(y-CH/2)*s.zoom;
+    s.cx=re; s.cy=im; s.zoom*=0.38; s.renderNeeded=true;
+  },
+  draw(ctx,s,p,{CW,CH}){
+    if(!s.renderNeeded && s.imgCache){ ctx.putImageData(s.imgCache,0,0); return; }
+    s.renderNeeded=false;
+    const maxIter=p.maxIter;
+    const imgData=ctx.createImageData(CW,CH);
+    const d=imgData.data;
+    for(let py=0;py<CH;py+=2) for(let px=0;px<CW;px+=2){
+      const re0=s.cx+(px-CW/2)*s.zoom, im0=s.cy+(py-CH/2)*s.zoom;
+      let re=0,im=0,iter=0;
+      while(iter<maxIter && re*re+im*im<4){ const tmp=re*re-im*im+re0; im=2*re*im+im0; re=tmp; iter++; }
+      let r=0,g=0,b=0;
+      if(iter<maxIter){
+        const t=iter/maxIter;
+        if(p.colorScheme==='fire'){ r=Math.round(lerp(0,255,Math.min(t*3,1))); g=Math.round(lerp(0,255,Math.min(Math.max(t*3-1,0),1))); b=Math.round(lerp(0,255,Math.min(Math.max(t*3-2,0),1))); }
+        else if(p.colorScheme==='ocean'){ r=0; g=Math.round(t*160); b=Math.round(lerp(100,255,t)); }
+        else { r=Math.round(Math.sin(t*6+0)*127+128); g=Math.round(Math.sin(t*6+2)*127+128); b=Math.round(Math.sin(t*6+4)*127+128); }
+      }
+      for(let di=0;di<2;di++) for(let dj=0;dj<2;dj++){
+        const idx=((py+dj)*CW+(px+di))*4;
+        d[idx]=r; d[idx+1]=g; d[idx+2]=b; d[idx+3]=255;
+      }
+    }
+    ctx.putImageData(imgData,0,0); s.imgCache=imgData;
+    ctx.fillStyle='#ffffff22'; ctx.font='10px var(--font-mono)'; ctx.textAlign='end'; ctx.fillText('انقر للتكبير',CW-6,CH-6);
+  },
+  readouts(s){ return [['المركز Re',s.cx.toFixed(5)],['المركز Im',s.cy.toFixed(5)],['مستوى التكبير',fmt(0.003/s.zoom,0)+'×']]; }
+});
+
+/* ---------- 24) مخطط التشعب (فوضى لوجستية) ---------- */
+defineSim({
+  id:'bifurcation', category:'chaos', title:'مخطط التشعب — الطريق إلى الفوضى',
+  tagline:'المعادلة اللوجستية: من التقارب إلى مضاعفة الدورة إلى الفوضى الكاملة.',
+  description:'المعادلة اللوجستية x_{n+1}=rx_n(1-x_n) بسيطة لكن سلوكها غني. عند r<3 يتقارب النظام لنقطة واحدة. ثم تتشعب إلى دورتين عند r≈3، ثم أربع... وهكذا في تشعبات متتالية تكثر بسرعة متزايدة حتى يصبح النظام فوضويًا عند r≈3.57.',
+  formula:'x_{n+1} = r · x_n · (1 − x_n)',
+  laws:[
+    '<b>ثابت فايغنباوم δ≈4.669:</b> نسبة الفترات بين التشعبات المتتالية ثابتة، وهو نفس الثابت في أنواع مختلفة من الأنظمة.',
+    '<b>عالمية الفوضى:</b> مسار التشعب هذا يظهر في المعادلات الفيزيائية والبيولوجية والكيميائية.',
+  ],
+  params:[
+    {key:'rMin', label:'r ابتداءً من', min:2,max:3.5,step:0.01,value:2.4,dec:2},
+    {key:'rMax', label:'r حتى', min:3,max:4,step:0.01,value:4,dec:2},
+  ],
+  init(){ return {img:null, dirty:true}; },
+  step(s){ s.dirty=true; },
+  draw(ctx,s,p,{CW,CH}){
+    if(!s.dirty && s.img){ ctx.putImageData(s.img,0,0); return; }
+    s.dirty=false;
+    ctx.fillStyle='#060a06'; ctx.fillRect(0,0,CW,CH);
+    const rMin=p.rMin, rMax=p.rMax;
+    const imgData=ctx.createImageData(CW,CH);
+    const d=imgData.data;
+    for(let px=0;px<CW;px++){
+      const r=rMin+(rMax-rMin)*(px/CW);
+      let x=0.5;
+      for(let i=0;i<300;i++) x=r*x*(1-x);
+      for(let i=0;i<200;i++){
+        x=r*x*(1-x);
+        const py=Math.floor((1-x)*CH);
+        if(py>=0&&py<CH){ const idx=(py*CW+px)*4; d[idx]=140; d[idx+1]=255; d[idx+2]=140; d[idx+3]=Math.min(d[idx+3]+30,180); }
+      }
+    }
+    ctx.putImageData(imgData,0,0); s.img=imgData;
+    ctx.strokeStyle='#2a3a28'; ctx.lineWidth=1; ctx.strokeRect(0,0,CW,CH);
+    ctx.fillStyle='#5e6b5c'; ctx.font='9px var(--font-mono)'; ctx.textAlign='center';
+    ctx.fillText(rMin.toFixed(2),16,CH-4); ctx.fillText(rMax.toFixed(2),CW-16,CH-4);
+    ctx.fillText('r →',CW/2,CH-4);
+    [3,3.45,3.57].forEach(rv=>{ if(rv>rMin&&rv<rMax){ const px=CW*(rv-rMin)/(rMax-rMin); ctx.strokeStyle='#ffffff22'; ctx.lineWidth=1; ctx.setLineDash([3,5]); ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,CH); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle='#ffffff44'; ctx.fillText(rv,px,12); } });
+  },
+  readouts(s,p){ return [['نطاق r',p.rMin.toFixed(2)+'→'+p.rMax.toFixed(2)],['بداية الفوضى','r≈3.57'],['ثابت فايغنباوم','δ≈4.669']]; }
+});
+
+/* ---------- 25) آليات النمو وأوتوماتا الخلايا (لعبة كونواي) ---------- */
+defineSim({
+  id:'gameOfLife', category:'chaos', title:'لعبة الحياة — الأوتوماتا الخلوية',
+  tagline:'قواعد بسيطة جدًا تنتج سلوكًا معقدًا وأنماطًا ذاتية التنظيم.',
+  description:'قواعد لعبة كونواي: خلية حية تبقى إذا كانت لها 2 أو 3 جارات حية، وتموت خلافًا لذلك. خلية ميتة تنبعث إذا كانت لها 3 جارات حية بالضبط. ومن هذه القواعد الثلاث البسيطة تنبثق سفن وذبذبات ومدافع وأنماط عشوائية لا تنتهي.',
+  formula:'B3/S23 — ولادة عند 3 جارات، بقاء عند 2 أو 3',
+  laws:[
+    '<b>الظهور (Emergence):</b> خصائص معقدة تظهر من تفاعلات محلية بسيطة دون أي تخطيط مركزي.',
+    '<b>الحوسبة الكونية:</b> لعبة الحياة إدارة تورنج-كاملة — يمكن بناء حاسوب كامل داخلها نظريًا.',
+  ],
+  hint:'انقر لرسم خلايا حية، واسحب لرسم خط',
+  params:[
+    {key:'speed', label:'سرعة الأجيال', min:1,max:20,step:1,value:8,dec:0},
+    {key:'preset', label:'نمط ابتدائي', type:'choice', value:'random',
+     choices:[{value:'random',label:'عشوائي'},{value:'glider',label:'طائرة ورقية'},{value:'rpentomino',label:'R-pentomino'}]},
+    {key:'wrap', label:'حواف دائرية', type:'bool', value:true},
+  ],
+  init(p,{CW,CH}){
+    const cell=8, cols=Math.floor(CW/cell), rows=Math.floor(CH/cell);
+    const grid=new Uint8Array(cols*rows);
+    if(p.preset==='random'){ for(let i=0;i<grid.length;i++) if(Math.random()<0.32) grid[i]=1; }
+    else if(p.preset==='glider'){ const cx=Math.floor(cols/2), cy=Math.floor(rows/2); [[1,0],[2,1],[0,2],[1,2],[2,2]].forEach(([dx,dy])=>{ if(cx+dx<cols&&cy+dy<rows) grid[(cy+dy)*cols+(cx+dx)]=1; }); }
+    else { const cx=Math.floor(cols/2), cy=Math.floor(rows/2); [[0,-1],[1,0],[-1,1],[0,1],[1,1]].forEach(([dx,dy])=>{ if(cx+dx>=0&&cx+dx<cols&&cy+dy>=0&&cy+dy<rows) grid[(cy+dy)*cols+(cx+dx)]=1; }); }
+    return {grid, next:new Uint8Array(cols*rows), cols, rows, cell, gen:0, tick:0, drawing:false, currentPreset:p.preset};
+  },
+  onDown(s,p,x,y){ const c=Math.floor(x/s.cell), r=Math.floor(y/s.cell); if(c>=0&&c<s.cols&&r>=0&&r<s.rows){ s.grid[r*s.cols+c]=1-s.grid[r*s.cols+c]; } s.drawing=true; },
+  onMove(s,p,x,y){ if(s.drawing){ const c=Math.floor(x/s.cell), r=Math.floor(y/s.cell); if(c>=0&&c<s.cols&&r>=0&&r<s.rows) s.grid[r*s.cols+c]=1; } },
+  onUp(s){ s.drawing=false; },
+  step(s,p,dt){
+    if(s.currentPreset!==p.preset){ Object.assign(s,this.init(p,{CW:s.cols*s.cell,CH:s.rows*s.cell})); return; }
+    s.tick+=dt*p.speed;
+    if(s.tick<0.05) return;
+    s.tick=0; s.gen++;
+    const {grid,next,cols,rows}=s; const wrap=p.wrap; next.fill(0);
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      let n=0;
+      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+        if(!dr&&!dc) continue;
+        let nr=r+dr, nc=c+dc;
+        if(p.wrap){ nr=(nr+rows)%rows; nc=(nc+cols)%cols; }
+        if(nr>=0&&nr<rows&&nc>=0&&nc<cols&&grid[nr*cols+nc]) n++;
+      }
+      const alive=grid[r*cols+c];
+      next[r*cols+c]=(alive&&(n===2||n===3))||(!alive&&n===3)?1:0;
+    }
+    grid.set(next);
+  },
+  draw(ctx,s,p,{CW,CH}){
+    ctx.fillStyle='#080e08'; ctx.fillRect(0,0,CW,CH);
+    const {grid,cols,rows,cell}=s;
+    ctx.fillStyle=hexA(App.accentHex,0.9);
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      if(grid[r*cols+c]){ ctx.fillRect(c*cell+0.5,r*cell+0.5,cell-1,cell-1); }
+    }
+    ctx.strokeStyle='#1a2218'; ctx.lineWidth=0.5;
+    for(let c=0;c<=cols;c++){ ctx.beginPath(); ctx.moveTo(c*cell,0); ctx.lineTo(c*cell,CH); ctx.stroke(); }
+    for(let r=0;r<=rows;r++){ ctx.beginPath(); ctx.moveTo(0,r*cell); ctx.lineTo(CW,r*cell); ctx.stroke(); }
+  },
+  readouts(s,p){ const alive=s.grid.reduce((a,b)=>a+b,0); return [['الجيل',s.gen],['خلايا حية',alive],['كثافة',fmt(alive/s.grid.length*100,1)+'%']]; }
+});
+
+/* ═══ نهاية المحاكيات ═══ */
+
+/* ============================================================
+   4) محرّك التشغيل
+   ============================================================ */
+const canvas=document.getElementById('simCanvas');
+const ctx=canvas.getContext('2d');
+let CW=0, CH=0, DPR=1;
+
+const App={
+  currentId:null, def:null, local:{}, params:{}, paused:false,
+  lastT:0, fpsAcc:0, fpsCount:0, fpsLast:0,
+};
+
+function resizeCanvas(){
+  const rect=canvas.parentElement.getBoundingClientRect();
+  DPR=Math.min(window.devicePixelRatio||1, 2);
+  CW=Math.max(280,Math.round(rect.width));
+  CH=Math.max(200,Math.round(rect.height));
+  canvas.width=CW*DPR; canvas.height=CH*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function setAccent(catId){
+  const c=catById[catId];
+  document.documentElement.style.setProperty('--accent', c.color);
+  document.documentElement.style.setProperty('--cat-color', c.color);
+  App.accentHex=c.color;
+}
+
+function buildSidebar(){
+  const nav=document.getElementById('sidebar');
+  nav.innerHTML='';
+  CATEGORIES.forEach((cat,ci)=>{
+    const sims=REGISTRY.filter(s=>s.category===cat.id);
+    if(!sims.length) return;
+    const group=document.createElement('div');
+    group.className='cat-group'+(ci===0?' open':'');
+    group.style.setProperty('--cat-color',cat.color);
+    group.innerHTML=`
+      <button class="cat-head">
+        <span class="dot"></span>
+        <span>${cat.label}</span>
+        <span class="count">${sims.length}</span>
+        <span class="chev"></span>
+      </button>
+      <div class="sim-list"></div>`;
+    const head=group.querySelector('.cat-head');
+    head.addEventListener('click',()=>group.classList.toggle('open'));
+    const list=group.querySelector('.sim-list');
+    sims.forEach(s=>{
+      const b=document.createElement('button');
+      b.className='sim-btn'; b.textContent=s.title; b.dataset.id=s.id;
+      b.style.setProperty('--cat-color',cat.color);
+      b.addEventListener('click',()=>{ loadSim(s.id); if(window.innerWidth<=920) document.body.classList.remove('nav-open'); });
+      list.appendChild(b);
+    });
+    nav.appendChild(group);
+  });
+  document.getElementById('statSims').textContent=REGISTRY.length;
+}
+
+function markActiveButton(id){
+  document.querySelectorAll('.sim-btn').forEach(b=>b.classList.toggle('active', b.dataset.id===id));
+}
+
+function buildControls(def){
+  const wrap=document.getElementById('controls');
+  wrap.innerHTML='';
+  if(!def.params || !def.params.length){
+    wrap.innerHTML='<p class="desc" style="margin:0">لا توجد إعدادات قابلة للتعديل لهذه المحاكاة — راقب السلوك مباشرة.</p>';
+    return;
+  }
+  def.params.forEach(p=>{
+    const val=App.params[p.key];
+    const div=document.createElement('div'); div.className='control';
+    if(p.type==='bool'){
+      div.innerHTML=`<div class="toggle-row"><label>${p.label}</label>
+        <label class="switch"><input type="checkbox" ${val?'checked':''}><span class="track"></span></label></div>`;
+      div.querySelector('input').addEventListener('change',e=>{ App.params[p.key]=e.target.checked; });
+    } else if(p.type==='choice'){
+      div.innerHTML=`<div class="row"><label>${p.label}</label></div><div class="btn-row"></div>`;
+      const row=div.querySelector('.btn-row');
+      p.choices.forEach(ch=>{
+        const cb=document.createElement('button'); cb.className='chip-btn'+(val===ch.value?' active':''); cb.textContent=ch.label;
+        cb.addEventListener('click',()=>{ App.params[p.key]=ch.value; row.querySelectorAll('.chip-btn').forEach(x=>x.classList.remove('active')); cb.classList.add('active'); });
+        row.appendChild(cb);
+      });
+    } else {
+      div.innerHTML=`<div class="row"><label>${p.label}</label><span class="val ltr">${fmt(val,p.dec??1)}${p.unit||''}</span></div>
+        <input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${val}">`;
+      const range=div.querySelector('input'); const valSpan=div.querySelector('.val');
+      range.addEventListener('input',e=>{ const v=parseFloat(e.target.value); App.params[p.key]=v; valSpan.textContent=fmt(v,p.dec??1)+(p.unit||''); });
+    }
+    wrap.appendChild(div);
+  });
+}
+
+function buildInfo(def){
+  document.getElementById('crumb').textContent=catById[def.category].label;
+  document.getElementById('simTitle').textContent=def.title;
+  document.getElementById('simSub').textContent=def.tagline||'';
+  document.getElementById('simDesc').textContent=def.description||'';
+  document.getElementById('simFormula').textContent=def.formula||'';
+  const laws=document.getElementById('simLaws'); laws.innerHTML='';
+  (def.laws||[]).forEach(l=>{ const li=document.createElement('li'); li.innerHTML=l; laws.appendChild(li); });
+  document.getElementById('hint').textContent=def.hint||'';
+}
+
+function defaultParams(def){
+  const o={};
+  (def.params||[]).forEach(p=>{ o[p.key]=p.value; });
+  return o;
+}
+
+function loadSim(id){
+  const def=simById[id];
+  if(!def) return;
+  App.currentId=id; App.def=def;
+  App.params=defaultParams(def);
+  setAccent(def.category);
+  resizeCanvas();
+  App.local = def.init ? (def.init(App.params, {CW,CH}) || {}) : {};
+  buildSidebar.lastId=id;
+  markActiveButton(id);
+  buildControls(def);
+  buildInfo(def);
+  location.hash=id;
+  App.paused=false;
+  document.getElementById('iconPlay').style.display='';
+  document.getElementById('iconPause').style.display='none';
+}
+
+function renderReadouts(){
+  const box=document.getElementById('readouts');
+  const ro = (App.def && App.def.readouts) ? App.def.readouts(App.local, App.params) : null;
+  if(!ro){ box.innerHTML=''; return; }
+  box.innerHTML = ro.map(r=>`<div class="ro"><label>${r[0]}</label><b class="ltr">${r[1]}</b></div>`).join('');
+}
+
+let acc=0;
+function loop(t){
+  requestAnimationFrame(loop);
+  if(!App.lastT) App.lastT=t;
+  let dt=(t-App.lastT)/1000; App.lastT=t;
+  dt=Math.min(dt,0.033);
+
+  App.fpsAcc+=dt; App.fpsCount++;
+  if(App.fpsAcc>0.5){ document.getElementById('statFps').textContent=Math.round(App.fpsCount/App.fpsAcc); App.fpsAcc=0; App.fpsCount=0; }
+
+  if(App.def){
+    if(!App.paused && App.def.step){
+      const sub = App.def.substeps||1;
+      for(let i=0;i<sub;i++) App.def.step(App.local, App.params, dt/sub, {CW,CH});
+    }
+    ctx.clearRect(0,0,CW,CH);
+    if(App.def.draw) App.def.draw(ctx, App.local, App.params, {CW,CH});
+    renderReadouts();
+  }
+}
+
+/* أحداث المؤشر/اللمس */
+function pointerPos(e){
+  const r=canvas.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return {x:cx-r.left, y:cy-r.top};
+}
+['pointerdown','contextmenu'].forEach(evt=>canvas.addEventListener(evt,e=>{
+  e.preventDefault();
+  const p=pointerPos(e);
+  if(App.def && App.def.onDown) App.def.onDown(App.local, App.params, p.x, p.y, {CW,CH}, e);
+}));
+['pointermove'].forEach(evt=>canvas.addEventListener(evt,e=>{
+  const p=pointerPos(e);
+  if(App.def && App.def.onMove) App.def.onMove(App.local, App.params, p.x, p.y, {CW,CH});
+}));
+['pointerup','pointerleave'].forEach(evt=>canvas.addEventListener(evt,e=>{
+  if(App.def && App.def.onUp) App.def.onUp(App.local, App.params);
+}));
+
+document.getElementById('btnPlay').addEventListener('click',()=>{
+  App.paused=!App.paused;
+  document.getElementById('iconPlay').style.display=App.paused?'':'none';
+  document.getElementById('iconPause').style.display=App.paused?'none':'';
+});
+document.getElementById('btnReset').addEventListener('click',()=>{
+  if(!App.def) return;
+  App.params=defaultParams(App.def);
+  App.local = App.def.init ? (App.def.init(App.params,{CW,CH})||{}) : {};
+  buildControls(App.def);
+});
+document.getElementById('menuBtn').addEventListener('click',()=>document.body.classList.toggle('nav-open'));
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) App.lastT=0; });
+
+/* ============================================================
+   5) الإقلاع
+   ============================================================ */
+function boot(){
+  buildSidebar();
+  const want = location.hash ? location.hash.slice(1) : null;
+  const startId = (want && simById[want]) ? want : (REGISTRY[0] && REGISTRY[0].id);
+  if(startId) loadSim(startId);
+  requestAnimationFrame(loop);
+}
+boot();
+</script>
+</body>
+</html>
