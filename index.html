@@ -2089,6 +2089,34 @@ function boot(){
   requestAnimationFrame(loop);
 }
 boot();
+// أضف هذي الدالة في جزء الـ script
+function initSidebar() {
+  const menuBtn = document.getElementById('menuBtn');
+  const sidebar = document.getElementById('sidebar');
+  const body = document.body;
+
+  // استخدام touchstart و click لضمان استجابة سريعة في الجوال
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    body.classList.toggle('nav-open');
+  });
+
+  // إغلاق القائمة عند الضغط خارجها
+  document.addEventListener('click', (e) => {
+    if (body.classList.contains('nav-open') && 
+        !sidebar.contains(e.target) && 
+        e.target !== menuBtn) {
+      body.classList.remove('nav-open');
+    }
+  });
+}
+
+// تأكد من استدعاء الدالة عند تحميل الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+  initSidebar();
+  // ... باقي كودك
+});
+   
 </script>
 </body>
 </html>
